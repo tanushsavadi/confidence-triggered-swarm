@@ -1,0 +1,68 @@
+# Confidence-Triggered Lifelong Adaptation for Drone Swarms
+# Default config — all hyperparameters in one place
+
+env:
+  num_drones: 2
+  physics: PYB                     # PYB_GND_DRAG_DW causes ground-effect instability
+  drone_model: CF2X
+  action_type: VEL                 # velocity control (PID handles stability)
+  obs_type: KIN                    # kinematic obs (pos, rpy, vel, ang_vel)
+  freq: 240                        # physics sim Hz
+  ctrl_freq: 30                    # control Hz
+  episode_len_sec: 15
+  gui: false
+  formation_spacing: 0.5           # target inter-drone distance (m)
+  target_height: 0.5
+  speed_limit: 0.5                 # override default 0.25 m/s
+  waypoint_threshold: 0.2
+  init_height: 0.5
+  tilt_threshold: 1.0              # max tilt (rad) before truncation
+  z_min: 0.01                      # min altitude before truncation
+
+training:
+  total_timesteps: 1_000_000
+  lr: 1.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_epsilon: 0.2
+  entropy_coef: 0.005              # lower = less erratic actions
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  n_epochs: 10
+  batch_size: 64
+  rollout_steps: 2048
+  seed: 42
+  device: auto
+
+policy:
+  hidden_dims: [256, 256]
+  activation: tanh
+  mc_dropout_p: 0.1
+  mc_samples: 10                   # MC forward passes for confidence
+
+adaptation:
+  confidence_threshold: 0.5        # trigger when confidence < this
+  adapt_epochs: 5
+  adapt_lr: 1.0e-4
+  ewc_lambda: 1000
+  replay_buffer_size: 10000
+  fisher_sample_size: 1000
+  confidence_window: 30            # rolling window — smaller = faster triggering
+  min_episode_steps: 30            # min steps for episode to qualify
+  min_adapt_reward: -5.0
+  clean_replay_ratio: 0.2
+  kl_anchor_coef: 0.5
+
+# surprise presets are defined in SurpriseConfig.from_severity()
+# these are just defaults for manual config
+surprise:
+  wind_force_range: [0.0, 0.05]
+  sensor_noise_std: 0.0
+  actuator_weakness: 1.0
+  goal_shift_prob: 0.0
+
+evaluation:
+  n_eval_episodes: 50
+  checkpoint_dir: checkpoints/
+  log_dir: logs/
+  results_dir: results/
