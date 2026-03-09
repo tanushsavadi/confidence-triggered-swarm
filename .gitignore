@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# PyBullet / simulation
+*.mp4
+*.avi
+
+# Large model files (keep tracked for reproducibility, but ignore temp ones)
+*.pt.tmp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# TensorBoard (the event files are big, keep CSVs)
+events.out.tfevents.*
+
+# OS
+Thumbs.db
+
+# Reference / vendored directories (not part of this project)
+_research/
+gym-pybullet-drones-install/
