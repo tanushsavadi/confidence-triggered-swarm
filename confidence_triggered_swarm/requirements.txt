@@ -1,0 +1,9 @@
+torch>=2.0
+numpy>=2.2
+gymnasium>=1.2
+pybullet>=3.2.5
+scipy>=1.10
+matplotlib>=3.7
+transforms3d>=0.4.1
+pyyaml>=6.0
+tensorboard>=2.14
