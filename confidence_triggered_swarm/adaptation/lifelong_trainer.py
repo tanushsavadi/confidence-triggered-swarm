@@ -248,7 +248,7 @@ class LifelongTrainer:
 
         if should_adapt and episode_is_useful:
             adapt_stats = self._adapt()
-            adapted = True
+            adapted = not bool(adapt_stats.get("skipped", False))
         elif should_adapt and not episode_is_useful:
             adapt_stats = {
                 "skipped": True,
@@ -307,11 +307,11 @@ class LifelongTrainer:
         3. KL anchoring toward clean policy
         4. EWC penalty
         """
-        self.total_adaptations += 1
-        self.monitor.adaptation_count += 1
-
         if len(self.replay_buffer["observations"]) < self.adapt_batch_size:
             return {"skipped": True, "reason": "insufficient_data"}
+
+        self.total_adaptations += 1
+        self.monitor.adaptation_count += 1
 
         obs_array = np.array(self.replay_buffer["observations"])
         act_array = np.array(self.replay_buffer["actions"])

@@ -30,6 +30,7 @@ Custom Gym environments built on top of gym-pybullet-drones.
 ### `evaluation/`
 
 - [`evaluator.py`](evaluation/evaluator.py) — `Evaluator` class that runs systematic comparisons. Evaluates frozen baseline vs adapted policy across all severity levels, collects per-episode stats, and outputs JSON results.
+- [`continual_metrics.py`](evaluation/continual_metrics.py) — GEM-style metrics from a reward matrix `R[i,j]`: average reward, backward/forward transfer, remembering, clean retention curve.
 
 ### `configs/`
 
@@ -67,10 +68,11 @@ From [`configs/default.yaml`](configs/default.yaml):
 | Script | What it does |
 |--------|-------------|
 | [`train_baseline.py`](scripts/train_baseline.py) | Train IPPO on clean formation flight |
-| [`train_lifelong.py`](scripts/train_lifelong.py) | Full pipeline: train baseline → evaluate frozen → adapt → evaluate adapted |
+| [`train_lifelong.py`](scripts/train_lifelong.py) | Full pipeline: train baseline → evaluate frozen → adapt → evaluate adapted (per severity, reset from baseline) |
+| [`train_continual.py`](scripts/train_continual.py) | Sequential continual learning: one agent adapts clean→…→severe; retroactive `R[i,j]` matrix + CL metrics |
 | [`evaluate.py`](scripts/evaluate.py) | Standalone evaluation using the Evaluator class |
 | [`run_ablations.py`](scripts/run_ablations.py) | Ablation study — disables components one at a time |
-| [`generate_plots.py`](scripts/generate_plots.py) | Creates final figures (PNG + PDF) |
+| [`generate_plots.py`](scripts/generate_plots.py) | Figures from JSON: `--evaluation-results`, `--ablation-results`, optional `--continual-results` → `runs/professor_ready/` fig1–fig8 |
 | [`test_env.py`](scripts/test_env.py) | Sanity check that the environment initializes and steps |
 | [`diagnose_episodes.py`](scripts/diagnose_episodes.py) | Debug tool — logs per-step states for a few episodes |
 | [`visualize.py`](scripts/visualize.py) | 3D PyBullet visualization of trained policy |

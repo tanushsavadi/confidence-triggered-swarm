@@ -1,0 +1,13 @@
+# Partial override merged with default.yaml.
+# Goal: trigger adaptation more often while staying close to the current method.
+
+adaptation:
+  confidence_threshold: 0.60
+  confidence_window: 15
+  min_episode_steps: 15
+  min_adapt_reward: -10.0
+  adapt_epochs: 6
+  adapt_lr: 1.5e-4
+  ewc_lambda: 800
+  clean_replay_ratio: 0.25
+  kl_anchor_coef: 0.4

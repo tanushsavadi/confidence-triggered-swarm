@@ -1,0 +1,13 @@
+# Partial override merged with default.yaml.
+# Goal: reduce the current 2% adaptation rate without removing safeguards.
+
+adaptation:
+  confidence_threshold: 0.65
+  confidence_window: 10
+  min_episode_steps: 10
+  min_adapt_reward: -10.0
+  adapt_epochs: 8
+  adapt_lr: 2.0e-4
+  ewc_lambda: 500
+  clean_replay_ratio: 0.30
+  kl_anchor_coef: 0.3

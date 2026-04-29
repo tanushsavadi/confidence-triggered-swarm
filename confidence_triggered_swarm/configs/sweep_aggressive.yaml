@@ -1,0 +1,13 @@
+# Partial override merged with default.yaml.
+# Goal: test whether stronger triggering helps moderate/severe recovery.
+
+adaptation:
+  confidence_threshold: 0.70
+  confidence_window: 10
+  min_episode_steps: 8
+  min_adapt_reward: -15.0
+  adapt_epochs: 8
+  adapt_lr: 2.0e-4
+  ewc_lambda: 300
+  clean_replay_ratio: 0.35
+  kl_anchor_coef: 0.2

@@ -3,6 +3,9 @@
 # Steps: train (or load) baseline -> eval frozen on each severity ->
 #         eval with lifelong adaptation -> compare & plot
 #
+# For sequential continual learning (clean→…→severe) with retroactive eval on
+# all severities after each phase, see `train_continual.py`.
+#
 # Usage:
 #     python -m confidence_triggered_swarm.scripts.train_lifelong
 #     python -m confidence_triggered_swarm.scripts.train_lifelong --baseline-path runs/baseline/best_model.pt

@@ -2,11 +2,13 @@
 
 **CS 690NN — Neural Networks Final Project**
 
+> **Documentation sync (2026).** **Section 4** tables and embedded figures match **`runs/full_eval/evaluation_results.json`** and **`runs/ablations/ablation_results.json`** (seed 42) unless noted. Figures are **`runs/professor_ready/fig*_*.png`** from `generate_plots.py`. **Sequential continual learning** (matrix, BWT/FWT, learning-over-time): **`runs/continual_run/continual_results.json`** -> **fig5-fig8**.
+
 ---
 
 ## Abstract
 
-Reinforcement learning policies for drone swarms are typically trained in idealized simulators, but deployment environments inevitably diverge from training conditions. Wind gusts, sensor degradation, actuator wear, and shifting mission objectives can cause large performance drops in frozen policies. In this project, we build a *confidence-triggered lifelong adaptation* system that detects post-deployment surprises using a dual-signal confidence monitor (policy entropy + MC-dropout variance), then performs between-episode fine-tuning with anti-forgetting safeguards — KL anchoring to the original policy, clean-experience replay mixing, and Elastic Weight Consolidation (EWC). We evaluate on a two-drone formation flight task in PyBullet, introducing a four-level surprise suite (clean, mild, moderate, severe) that combines wind perturbation, sensor noise, actuator weakness, and goal shift. The adapted policy improves reward by **+138.8%** under moderate surprises and **+152.0%** under severe surprises relative to the frozen baseline, while showing **no catastrophic forgetting** on the original clean task (+10.8% reward after adaptation). Ablation studies confirm that each anti-forgetting component contributes to stable adaptation.
+Reinforcement learning policies for drone swarms are typically trained in idealized simulators, but deployment environments inevitably diverge from training conditions. Wind gusts, sensor degradation, actuator wear, and shifting mission objectives can cause large performance drops in frozen policies. In this project, we build a *confidence-triggered lifelong adaptation* system that detects post-deployment surprises using a dual-signal confidence monitor (policy entropy + MC-dropout variance), then performs between-episode fine-tuning with anti-forgetting safeguards — KL anchoring to the original policy, clean-experience replay mixing, and Elastic Weight Consolidation (EWC). We evaluate on a two-drone formation flight task in PyBullet, introducing a four-level surprise suite (clean, mild, moderate, severe) that combines wind perturbation, sensor noise, actuator weakness, and goal shift. On the saved **per-severity** evaluator run (50 episodes per condition, seed 42), the lifelong policy improves mean reward vs. frozen by **+4.1%** (clean), **+50.8%** (mild), and **+54.7%** (severe); on **moderate** severity mean reward is **−8.5%** relative to frozen in this run, illustrating sensitivity and high variance at mid-level perturbations. A forgetting check after adaptation on severe shows **no catastrophic forgetting** on clean (**+5.9%** vs. the forgetting baseline on clean). Ablation studies under severe surprise highlight a stability–performance tradeoff (full method: lowest variance). We additionally report **sequential continual** metrics (matrix, BWT/FWT) from `train_continual.py` in `docs/professor_brief.md` and fig5–fig8.
 
 ---
 
@@ -163,54 +165,54 @@ The IPPO baseline was trained for 1M timesteps on the clean FormationAviary envi
 
 ### 4.2 Surprise Degradation (Frozen Policy)
 
-We evaluate the frozen baseline on each severity level (20 episodes per level):
+We evaluate the frozen baseline on each severity level (50 episodes per level; `runs/full_eval/evaluation_results.json`):
 
 | Severity | Mean Reward | Waypoints Reached |
 |----------|-------------|-------------------|
-| clean    | 1,337.7     | 0.75              |
-| mild     | 160.3       | 0.60              |
-| moderate | 31.6        | 0.25              |
-| severe   | 24.0        | 0.25              |
+| clean    | 1,305.2     | 0.92              |
+| mild     | 105.9       | 0.44              |
+| moderate | 49.4        | 0.24              |
+| severe   | 27.3        | 0.08              |
 
-The frozen policy suffers dramatic performance degradation: reward drops by 88% from clean to mild and by 97.6% from clean to moderate. Even mild surprises (small wind and sensor noise alone) cause severe reward reduction, highlighting how fragile policies trained under idealized conditions can be.
+The frozen policy suffers dramatic performance degradation: reward drops by roughly **92%** from clean to mild and by roughly **96%** from clean to moderate. Even mild surprises (small wind and sensor noise alone) cause severe reward reduction, highlighting how fragile policies trained under idealized conditions can be.
 
-![Frozen vs Adapted Performance](runs/final_plots/fig1_frozen_vs_adapted.png)
+![Frozen vs Adapted Performance](runs/professor_ready/fig1_frozen_vs_lifelong.png)
 *Figure 1: Frozen vs. Adapted Policy Performance Under Surprise. The adapted policy matches or exceeds the frozen policy at all severity levels.*
 
 ### 4.3 Lifelong Adaptation Results
 
-The adapted policy, which performs between-episode fine-tuning when confidence drops below threshold, achieves substantial improvements:
+The adapted policy performs between-episode fine-tuning when confidence drops below threshold. Numbers below match the **`comparison`** block in `runs/full_eval/evaluation_results.json`:
 
-| Severity | Frozen Reward | Adapted Reward | Δ Reward % | Frozen WP | Adapted WP |
-|----------|--------------|----------------|------------|-----------|------------|
-| clean    | 1,337.7      | 1,459.3        | **+9.1%**  | 0.75      | 0.75       |
-| mild     | 160.3        | 158.7          | −1.0%      | 0.60      | 0.50       |
-| moderate | 31.6         | 75.4           | **+138.8%**| 0.25      | 0.40       |
-| severe   | 24.0         | 60.4           | **+152.0%**| 0.25      | 0.25       |
+| Severity | Frozen Reward | Lifelong Reward | Δ Reward % | Frozen WP | Lifelong WP |
+|----------|--------------|-----------------|------------|-----------|-------------|
+| clean    | 1,305.2      | 1,358.9         | **+4.1%**  | 0.92      | 0.82        |
+| mild     | 105.9        | 159.7           | **+50.8%** | 0.44      | 0.52        |
+| moderate | 49.4         | 45.2            | **−8.5%** | 0.24      | 0.22        |
+| severe   | 27.3         | 42.2            | **+54.7%** | 0.08      | 0.12        |
 
 Key observations:
 
-- **Clean**: The adapted policy actually *improves* on clean (+9.1%), likely due to beneficial fine-tuning from calibration data.
-- **Mild**: Performance is roughly unchanged (−1.0%), which is what we want — the confidence threshold correctly avoids unnecessary adaptation when things are mostly fine.
-- **Moderate**: A substantial +138.8% improvement, with waypoint reach rate increasing from 0.25 to 0.40.
-- **Severe**: The largest relative improvement (+152.0%), though absolute performance is still modest (60.4 reward vs 24.0). This reflects the fundamental difficulty of adapting to extreme perturbations with limited data.
+- **Clean**: Small improvement (+4.1% reward); waypoint mean is slightly lower (0.82 vs 0.92), consistent with conservative adaptation not being tuned for clean-only deployment.
+- **Mild**: Strong relative gain (+50.8%) despite overlapping confidence with clean—suggesting that light perturbation leaves room for useful updates when triggered.
+- **Moderate**: Mean reward is slightly *below* frozen in this run (−8.5%), with similar waypoint rates—worth interpreting cautiously given high episode-to-episode variance at this severity.
+- **Severe**: Largest relative gain (+54.7%) with higher waypoint rate (0.12 vs 0.08), though absolute rewards remain low.
 
-![Degradation Curves](runs/final_plots/fig2_degradation.png)
+![Degradation Curves](runs/professor_ready/fig2_degradation.png)
 *Figure 2: Performance Degradation Under Increasing Surprise Severity. The adapted policy (orange) degrades more gracefully than the frozen policy (blue), with the gap widening at higher severities.*
 
 ### 4.4 Forgetting Analysis
 
-A critical question is whether adapting to severe surprises causes the policy to forget how to fly under clean conditions. We evaluate the adapted policy (after fine-tuning on severe episodes) back on the clean environment:
+A critical question is whether adapting to severe surprises causes the policy to forget how to fly under clean conditions. The evaluator’s **`forgetting`** block compares clean reward *before* vs. *after* the severe-adaptation phase (`runs/full_eval/evaluation_results.json`):
 
 | Condition               | Mean Reward | Waypoints Reached |
 |-------------------------|-------------|-------------------|
-| Baseline on clean       | 1,293.1     | 0.85              |
-| Post-adaptation on clean| 1,433.3     | 1.05              |
-| **Δ**                   | **+10.8%**  | **+23.5%**        |
+| Baseline on clean       | 1,308.9     | 0.90              |
+| Post-adaptation on clean| 1,386.1     | 0.86              |
+| **Δ (reward)**          | **+5.9%**   | —                 |
 
-We see no catastrophic forgetting. The adapted policy actually *improves* on the clean task by +10.8% in reward and +23.5% in waypoints reached, suggesting the anti-forgetting measures (KL anchoring, clean replay, and EWC) do their job during adaptation. This is an encouraging result, though we note it comes from a single seed and should be validated more broadly.
+We see no catastrophic forgetting (`forgetting_detected: false` in JSON). The anti-forgetting measures (KL anchoring, clean replay, and EWC) appear to keep clean performance in line with or slightly above the forgetting baseline; results are from a **single seed** and should be validated more broadly.
 
-![Forgetting Analysis](runs/final_plots/fig4_forgetting.png)
+![Forgetting Analysis](runs/professor_ready/fig4_forgetting.png)
 *Figure 4: Catastrophic Forgetting Analysis. Clean performance is maintained — and even slightly improved — after adaptation to severe surprises.*
 
 ### 4.5 Ablation Study
@@ -225,7 +227,7 @@ To quantify the contribution of each anti-forgetting component, we run ablations
 | No Clean Replay     | 46.21       | 59.91      | 0.27      | 1           |
 | No EWC              | 45.89       | 62.81      | 0.27      | 1           |
 
-![Ablation Study](runs/final_plots/fig3_ablations.png)
+![Ablation Study](runs/professor_ready/fig3_ablations.png)
 *Figure 3: Ablation Study Under Severe Surprise. Removing any single anti-forgetting component leads to higher but more variable performance, suggesting less stable adaptation.*
 
 Several patterns show up in the ablation:
@@ -233,20 +235,60 @@ Several patterns show up in the ablation:
 1. **Full method has the lowest variance** (σ = 21.58 vs 59–78 for ablated variants), meaning the most *stable* behavior even though the mean reward is lower.
 2. **Removing KL anchoring** gives the highest mean reward (53.13) but also the highest variance (77.84). Without the anchor, adaptation can sometimes find good policies but is unreliable.
 3. **Removing clean replay or EWC** produces similar results (~46 reward), confirming both contribute to stability.
-4. **Adaptation triggering**: The full method triggered 0 adaptations in this 15-episode ablation run while ablated variants triggered 1. The full system is more conservative about when to adapt. The longer 20-episode evaluation in Section 4.3 shows adaptations do occur over more episodes.
+4. **Adaptation triggering**: The full method triggered 0 adaptations in this 15-episode ablation run while ablated variants triggered 1. The full system is more conservative about when to adapt. The longer 50-episode **per-severity** evaluation in Section 4.3 records a small non-zero adaptation rate (see JSON).
 
 ### 4.6 Confidence Monitoring Analysis
 
 We examine the confidence monitor's behavior across severity levels:
 
 | Severity | Mean Confidence | Adaptation Rate |
-|----------|----------------|-----------------|
-| clean    | 0.726          | 5%              |
-| mild     | 0.720          | 5%              |
-| moderate | 0.572          | 5%              |
-| severe   | 0.694          | 5%              |
+|----------|-----------------|-----------------|
+| clean    | 0.737           | 2%              |
+| mild     | 0.733           | 2%              |
+| moderate | 0.589           | 2%              |
+| severe   | 0.670           | 2%              |
 
-The confidence monitor correctly identifies moderate conditions as the most uncertain (0.572), consistent with the large performance gap there. The severe-condition confidence (0.694) being higher than moderate is counter-intuitive but may reflect that under severe perturbation the policy settles into a limited but predictable pattern (e.g., hovering in place), whereas moderate perturbation creates more variable responses. The uniform 5% adaptation rate across conditions suggests the threshold is conservative; adjusting it is a clear direction for future work.
+The confidence monitor assigns the **lowest** mean confidence to **moderate** (0.589), consistent with that regime being hardest to interpret. **Severe** shows higher mean confidence (0.670) than moderate despite lower reward—possibly because the policy collapses to a more stereotyped failure mode. The **uniform 2%** adaptation rate in this 50-episode run reflects a conservative trigger; threshold calibration remains future work.
+
+### 4.7 Sequential Continual Learning Evaluation
+
+To directly address the continual-learning feedback, we added a separate sequential run in **`train_continual.py`**. Unlike `train_lifelong.py`, which resets from the baseline checkpoint for each severity, this run keeps one lifelong policy and adapts through the curriculum:
+
+> clean -> mild -> moderate -> severe
+
+After each phase, the policy is re-evaluated on **all** severities. This produces a reward matrix `R[i,j]`, where row `i` is the training phase completed and column `j` is the evaluation task. The canonical artifact is **`runs/continual_run/continual_results.json`** (50 adaptation episodes and 50 evaluation episodes per phase, seed 42).
+
+| Training phase completed | Clean eval | Mild eval | Moderate eval | Severe eval |
+|--------------------------|-----------:|----------:|--------------:|------------:|
+| After clean              | 1,316.0    | 146.9     | 48.1          | 38.5        |
+| After mild               | 1,261.3    | 143.5     | 94.9          | 21.5        |
+| After moderate           | 1,406.2    | 159.2     | 40.3          | 31.8        |
+| After severe             | 1,322.9    | 131.2     | 92.0          | 26.1        |
+
+The clean-retention column answers the key question: after adapting to later conditions, we did go back and evaluate the clean task. Clean reward remains in the same range after mild and severe adaptation (1,316.0 -> 1,261.3 -> 1,406.2 -> 1,322.9), so this run does **not** show catastrophic forgetting on clean.
+
+We also report continual-learning diagnostics inspired by the matrix-based evaluation style in van de Ven et al. (2024):
+
+| Metric | Lifelong | Frozen reference |
+|--------|---------:|-----------------:|
+| Average reward after final phase | 393.1 | 412.9 |
+| Backward transfer (BWT) | +15.4 | 0.0 |
+| Forward transfer (FWT) | +17.2 | 0.0 |
+| Remembering | 1.0 | 1.0 |
+
+This is the most honest interpretation: the sequential run supports **clean retention** and positive BWT/FWT in this seed, but the final average reward is still slightly lower than the frozen reference. The result is evidence that the anti-forgetting machinery is working, not evidence that lifelong adaptation dominates frozen evaluation in every metric.
+
+![Training Over Time](runs/professor_ready/fig5_training_over_time.png)
+*Figure 5: Per-episode reward through clean, mild, moderate, and severe sequential phases.*
+
+![Continual Matrix](runs/professor_ready/fig6_continual_matrix.png)
+*Figure 6: Retroactive continual-learning matrix for lifelong and frozen policies.*
+
+![Clean Retention](runs/professor_ready/fig7_clean_retention.png)
+*Figure 7: Clean-task reward after each sequential adaptation phase.*
+
+![Continual Metrics](runs/professor_ready/fig8_cl_metrics.png)
+*Figure 8: Average reward, BWT, FWT, and remembering from the reward matrix.*
 
 ---
 
@@ -254,13 +296,15 @@ The confidence monitor correctly identifies moderate conditions as the most unce
 
 Our experiments show three main findings:
 
-**1. Post-training surprises are devastating for frozen policies.** Even mild perturbations cause an 88% reward drop, validating the motivation for adaptive systems. The clean-to-severe degradation of 98.2% underscores that static policies are brittle to distributional shift.
+**1. Post-training surprises are devastating for frozen policies.** Mild perturbations drive roughly a **92%** reward drop relative to clean in our frozen evaluation; clean-to-severe degradation is on the order of **98%**, underscoring brittleness to shift.
 
-**2. Confidence-triggered adaptation provides meaningful recovery.** The +138.8% and +152.0% improvements under moderate and severe surprises show that between-episode fine-tuning can substantially improve performance. The system only adapts when it needs to — under clean or mild conditions, it correctly leaves the policy alone.
+**2. Confidence-triggered adaptation is mixed at moderate but strong at mild and severe.** In the saved **per-severity** run, lifelong improves **mild (+50.8%)** and **severe (+54.7%)** vs. frozen, with a small gain on **clean (+4.1%)**. **Moderate** is **worse on mean reward (−8.5%)** than frozen here—consistent with high-variance dynamics and threshold sensitivity rather than a guaranteed monotonic win at every severity.
 
-**3. Anti-forgetting safeguards preserve original competence.** The post-adaptation policy not only maintains but *improves* clean-environment performance (+10.8%), suggesting the anti-forgetting measures work. The ablation study confirms that each component contributes to stable, reliable adaptation — removing any one of them leads to higher variance.
+**3. Anti-forgetting safeguards help on the forgetting probe.** After severe-phase adaptation, clean reward is **+5.9%** vs. the forgetting baseline on clean, with `forgetting_detected: false` in the JSON. The ablation study still shows a tension between **stability** (full method, lowest variance) and **raw mean reward** (some ablations higher mean, much higher variance).
 
-The results also reveal important limitations. Absolute performance under severe surprise remains modest (60.4 reward), suggesting that between-episode adaptation has a ceiling when the distributional shift is extreme. The conservative confidence threshold (5% adaptation rate even under severe surprise) means many opportunities for adaptation are missed. The ablation study also shows a tension between stability (full method, low variance) and raw performance (ablated variants, higher mean but much higher variance) — how to balance this is an open question.
+**4. The sequential continual run addresses the clean-after-adaptation question.** The `R[i,j]` matrix re-tests clean after every later phase. Clean reward remains stable in the saved run, and BWT/FWT are positive, but the final average reward is slightly below the frozen reference. This supports a careful claim: we see retention without catastrophic forgetting, while stronger lifelong performance would require better triggers and multi-seed validation.
+
+Important limitations remain: absolute performance under severe surprise is still modest (~42 mean reward), and the **2%** episode adaptation rate indicates a conservative trigger. The ablation episode count (15) is smaller than the main evaluator (50).
 
 We want to be upfront that these results come from a single random seed with only 2 drones in simplified physics. The trends are encouraging, but broader validation is needed before drawing strong conclusions.
 
@@ -270,7 +314,7 @@ We want to be upfront that these results come from a single random seed with onl
 
 1. **Single seed**: All experiments use seed 42. We need multi-seed evaluation to establish statistical significance and check sensitivity to initialization.
 
-2. **Conservative adaptation trigger**: The uniform 5% adaptation rate across all severities suggests the confidence threshold could be better calibrated. An adaptive threshold or different combination of uncertainty signals could improve detection.
+2. **Conservative adaptation trigger**: The uniform **2%** adaptation rate in the 50-episode per-severity run suggests the confidence threshold could be better calibrated. An adaptive threshold or different combination of uncertainty signals could improve detection.
 
 3. **Small swarm scale**: We only evaluate with 2 drones. Real swarms involve 4+ agents, and scaling up introduces challenges in shared-parameter policies, communication, and emergent coordination that we don't address here.
 
@@ -286,7 +330,7 @@ We want to be upfront that these results come from a single random seed with onl
 
 ## 7. Conclusion and Future Work
 
-In this project, we built a confidence-triggered lifelong adaptation system for drone swarm policies operating under post-training surprises. The system combines dual-signal confidence monitoring (entropy + MC-dropout variance) with conservative between-episode fine-tuning and three anti-forgetting safeguards (KL anchoring, clean replay, EWC). Evaluated on a two-drone formation flight task with a four-level surprise suite, the adapted policy recovers **+138.8%** reward under moderate and **+152.0%** under severe surprises, while maintaining clean-task performance after adaptation.
+In this project, we built a confidence-triggered lifelong adaptation system for drone swarm policies operating under post-training surprises. The system combines dual-signal confidence monitoring (entropy + MC-dropout variance) with conservative between-episode fine-tuning and three anti-forgetting safeguards (KL anchoring, clean replay, EWC). On the saved per-severity evaluation (seed 42), lifelong improves frozen mean reward on **mild** and **severe**, shows a small gain on **clean**, and does **not** improve mean reward on **moderate** in this run; the forgetting check shows **no catastrophic forgetting** on clean after severe adaptation. The sequential continual run adds the missing clean-after-adaptation view: after adapting through clean -> mild -> moderate -> severe, clean reward remains in the same range and the matrix metrics show positive BWT/FWT for this seed.
 
 The main contribution is showing that combining existing techniques — confidence monitoring, reward-weighted fine-tuning, and anti-forgetting regularization — into a single pipeline can provide meaningful adaptation without catastrophic forgetting, at least in our simplified setting.
 
@@ -320,6 +364,8 @@ The following are directions we plan to explore but have **not yet implemented**
 10. Sedlmeier, A., et al. (2020). "Uncertainty-based out-of-distribution detection in deep reinforcement learning." *arXiv:2001.00951*.
 11. Panerati, J., et al. (2021). "Learning to fly — a gym environment with PyBullet physics for reinforcement learning of multi-agent quadrotor control." *IROS*.
 12. Schulman, J., et al. (2017). "Proximal policy optimization algorithms." *arXiv:1707.06347*.
+13. van de Ven, G. M., Soures, N., & Kudithipudi, D. (2024). "Continual Learning and Catastrophic Forgetting." *arXiv:2403.05175*.
+14. Lopez-Paz, D., & Ranzato, M. (2017). "Gradient Episodic Memory for Continual Learning." *NeurIPS*.
 
 ---
 

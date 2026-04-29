@@ -6,16 +6,41 @@ Lifelong learning for drone swarms under distributional shift.
 
 CS 690NN (Neural Networks) final project. We train a pair of drones to fly in formation using IPPO, then throw surprises at them after training — wind gusts, sensor noise, actuator failures, shifted goals. The system monitors its own confidence and adapts between episodes when things go wrong, without forgetting how to fly clean.
 
-## Quick Results
+## Current Repo Status
 
-| Condition | Frozen Reward | Adapted Reward | Recovery |
-|-----------|--------------|----------------|----------|
-| Clean     | -6.53        | -6.53          | —        |
-| Mild      | -6.95        | -6.61          | +83%     |
-| Moderate  | -8.85        | -7.22          | +70%     |
-| Severe    | -12.41       | -8.87          | +60%     |
+This repository already contains:
 
-**Forgetting check:** post-adaptation clean performance = -6.60 vs baseline -6.53. That's only 1% degradation — the policy doesn't forget how to fly clean after adapting to surprises.
+- a trained baseline checkpoint and rollout logs in `runs/baseline/`
+- saved frozen/lifelong evaluation artifacts in `runs/full_eval/` and `runs/lifelong_eval/`
+- saved ablation results in `runs/ablations/`
+- a professor-facing summary in `docs/professor_brief.md`
+- demo/talk notes in `docs/professor_demo_notes.md`
+- **canonical** sequential continual-learning results in **`runs/continual_run/continual_results.json`** (50 adapt / 50 eval per phase, seed 42; fig5–8). Older exploratory run: `runs/continual_20260417/`.
+
+**`runs/professor_ready/`** holds PNG/PDF figures generated from the JSONs below (regenerate after changing eval data). Older draft visuals may live under `runs/final_plots/` and should not be mixed with current numbers without relabeling.
+
+Regenerate all eight figures from saved JSON outputs with:
+
+```bash
+./.venv310/bin/python -m confidence_triggered_swarm.scripts.generate_plots \
+    --evaluation-results runs/full_eval/evaluation_results.json \
+    --ablation-results runs/ablations/ablation_results.json \
+    --continual-results runs/continual_run/continual_results.json \
+    --output-dir runs/professor_ready
+```
+
+Omit `--continual-results` if you only want fig1–fig4.
+
+### Artifact lineage (what matches which figures)
+
+| Outputs | Role |
+|---------|------|
+| `runs/full_eval/evaluation_results.json` | **fig1, fig2, fig4** — `Evaluator` suite (frozen + lifelong per severity + forgetting); refresh with `python -m confidence_triggered_swarm.scripts.evaluate --baseline-path runs/baseline/best_model.pt --save-dir runs/full_eval` |
+| `runs/ablations/ablation_results.json` | **fig3** |
+| **`runs/continual_run/continual_results.json`** | **fig5–fig8** — sequential continual matrix + metrics |
+| `runs/professor_ready/` | Generated PNG/PDF from the command above |
+
+Slide-ready bullets and figure mapping: [`docs/continual_presentation_outline.md`](docs/continual_presentation_outline.md).
 
 ## How It Works
 
@@ -35,18 +60,18 @@ confidence_triggered_swarm/
 ├── algorithms/      # PPO, actor-critic, replay buffer
 ├── adaptation/      # confidence monitor, EWC, lifelong trainer
 ├── envs/            # formation aviary + surprise wrapper
-├── evaluation/      # systematic eval harness
+├── evaluation/      # systematic eval harness + continual_metrics (BWT/FWT helpers)
 ├── configs/         # YAML hyperparameters
 ├── scripts/         # training, eval, plotting, diagnostics
 └── utils/           # logging, shared helpers
 
 runs/                # saved models + experiment results
-docs/                # initial design doc
+docs/                # design notes, professor brief, presentation outline — see docs/README.md
 _research/           # reference MAPPO codebase (not used in our code)
 gym-pybullet-drones-install/  # local copy of PyBullet drones lib
 ```
 
-See [`confidence_triggered_swarm/README.md`](confidence_triggered_swarm/README.md) for detailed module docs.
+See [`confidence_triggered_swarm/README.md`](confidence_triggered_swarm/README.md) for detailed module docs. **`REPORT.md`** is the long-form write-up; its opening note explains how to align claims with **`runs/full_eval/`** and **`runs/continual_run/`** JSON.
 
 ## Setup & Reproduction
 
@@ -81,26 +106,45 @@ pip install -r confidence_triggered_swarm/requirements.txt
 ```bash
 # Train baseline (~20 min on CPU, M-series Mac)
 python -m confidence_triggered_swarm.scripts.train_baseline \
-    --total-timesteps 500000 --seed 42 --output-dir runs/baseline
+    --timesteps 500000 --seed 42 --save-dir runs/baseline
 
 # Evaluate frozen vs adapted across severity levels
 python -m confidence_triggered_swarm.scripts.train_lifelong \
-    --model runs/baseline/best_model.pt --output-dir runs/lifelong_eval
+    --baseline-path runs/baseline/best_model.pt --save-dir runs/lifelong_eval
 
-# Generate final plots
-python -m confidence_triggered_swarm.scripts.generate_plots
+# Sequential continual learning: adapt clean→mild→moderate→severe once, re-eval all severities after each phase
+python -m confidence_triggered_swarm.scripts.train_continual \
+    --baseline-path runs/baseline/best_model.pt --save-dir runs/continual_run
+
+# Generate professor-ready plots from saved JSON outputs
+./.venv310/bin/python -m confidence_triggered_swarm.scripts.generate_plots \
+    --evaluation-results runs/full_eval/evaluation_results.json \
+    --ablation-results runs/ablations/ablation_results.json \
+    --continual-results runs/continual_run/continual_results.json \
+    --output-dir runs/professor_ready
 ```
 
-We used seed=42 for all experiments. Training takes ~20 min on CPU (MacBook Pro M-series).
+We used seed=42 for all experiments. Training takes ~20 min on CPU (MacBook Pro M-series). In this checked-out workspace, the project virtualenv is `.venv310`; in a fresh environment, replace `./.venv310/bin/python` with the active environment's `python`.
 
 ## Figures
 
-Final figures live in `runs/final_plots/` (PNG + PDF):
+Artifact-based figures can be generated into `runs/professor_ready/` (PNG + PDF):
 
-- **fig1** — Frozen vs adapted performance across severity levels (grouped bar chart)
-- **fig2** — Degradation curves showing how severity impacts rewards
-- **fig3** — Ablation study: what happens when you remove KL, replay, or EWC
-- **fig4** — Forgetting check: clean performance stays stable after adaptation
+- **fig1** — Frozen vs lifelong reward by severity from saved evaluation JSON
+- **fig2** — Degradation curve from saved evaluation JSON
+- **fig3** — Ablation study from saved ablation JSON
+- **fig4** — Forgetting check from saved evaluation JSON
+
+### Continual learning evaluation (professor feedback)
+
+This follows the diagnostic view in van de Ven, Soures & Kudithipudi, *Continual Learning and Catastrophic Forgetting* ([arXiv:2403.05175](https://arxiv.org/abs/2403.05175), also in `docs/2403.05175v1.pdf`): periodic evaluation, backward/forward transfer, and “training over time” style plots.
+
+`train_lifelong.py` evaluates each severity **independently** from the baseline checkpoint. **`train_continual.py`** runs one **sequential** run (clean → mild → moderate → severe): after each phase it measures mean episode reward on **every** severity, building a matrix `R[i,j]` (performance on task `j` after training through phase `i`). That answers “how is **clean** after adapting on **mild**?” directly. Metrics (GEM-style; Lopez-Paz & Ranzato 2017): **average reward** (last row mean), **backward transfer (BWT)**, **forward transfer (FWT)**, **remembering** — see `confidence_triggered_swarm/evaluation/continual_metrics.py`.
+
+- **fig5** — Per-episode reward across sequential phases (raw + rolling mean); frozen vs lifelong
+- **fig6** — Heatmaps of `R_lifelong` and `R_frozen`
+- **fig7** — Clean-task reward vs phase (forgetting / retention curve)
+- **fig8** — Bar chart of CL metrics (lifelong vs frozen reference; frozen BWT/FWT are 0 by construction)
 
 ## Phase 2 Roadmap
 

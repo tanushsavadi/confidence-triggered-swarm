@@ -1,0 +1,338 @@
+{
+  "baseline": {
+    "clean": {
+      "mean_reward": 1212.6607077576887,
+      "std_reward": 250.68137664372367,
+      "mean_episode_length": 452.0,
+      "mean_waypoints_reached": 1.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        1595.586493596968,
+        1212.498539926295,
+        1057.15221608234,
+        856.5787756726725,
+        1341.4875135101677
+      ],
+      "all_waypoints": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "n_episodes": 5,
+      "severity": "clean",
+      "mode": "frozen"
+    },
+    "mild": {
+      "mean_reward": 106.87547517322886,
+      "std_reward": 131.99930420198038,
+      "mean_episode_length": 29.2,
+      "mean_waypoints_reached": 0.6,
+      "success_rate": 0.2,
+      "all_rewards": [
+        47.91878609301501,
+        30.139615118208553,
+        40.04857530172626,
+        370.58811590760575,
+        45.682283445588794
+      ],
+      "all_waypoints": [
+        0,
+        0,
+        0,
+        2,
+        1
+      ],
+      "n_episodes": 5,
+      "severity": "mild",
+      "mode": "frozen"
+    },
+    "moderate": {
+      "mean_reward": 94.50140663375161,
+      "std_reward": 130.9686295301418,
+      "mean_episode_length": 21.2,
+      "mean_waypoints_reached": 0.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        40.28148930229306,
+        28.455137857263566,
+        18.086177848175932,
+        29.623052881030674,
+        356.06117527999487
+      ],
+      "all_waypoints": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "n_episodes": 5,
+      "severity": "moderate",
+      "mode": "frozen"
+    },
+    "severe": {
+      "mean_reward": 65.82466185481304,
+      "std_reward": 95.94065454042097,
+      "mean_episode_length": 13.8,
+      "mean_waypoints_reached": 0.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        8.557968836696395,
+        257.1615645899559,
+        28.141846730006428,
+        23.483400668768386,
+        11.778528448638111
+      ],
+      "all_waypoints": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "n_episodes": 5,
+      "severity": "severe",
+      "mode": "frozen"
+    }
+  },
+  "lifelong": {
+    "clean": {
+      "label": "lifelong/clean",
+      "n_episodes": 5,
+      "mean_reward": 1443.251924713101,
+      "std_reward": 163.73159810117784,
+      "mean_confidence": 0.6666662256371734,
+      "mean_waypoints_reached": 1.0,
+      "mean_episode_length": 446.6,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 0,
+      "all_rewards": [
+        1253.699067345697,
+        1608.5948899684352,
+        1416.4682137619031,
+        1654.1591604700636,
+        1283.338292019407
+      ],
+      "all_confidences": [
+        0.3856992523183408,
+        0.7376585052831482,
+        0.7405232388058947,
+        0.7359889814382617,
+        0.7334611503402216
+      ],
+      "severity": "clean",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "mild": {
+      "label": "lifelong/mild",
+      "n_episodes": 5,
+      "mean_reward": 281.6094769771804,
+      "std_reward": 300.25006059505023,
+      "mean_confidence": 0.6033718601482005,
+      "mean_waypoints_reached": 0.4,
+      "mean_episode_length": 95.4,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 3,
+      "all_rewards": [
+        47.47474858601762,
+        771.190457488202,
+        44.52855461416274,
+        48.97001481718037,
+        495.88360938033935
+      ],
+      "all_confidences": [
+        0.4138198466387504,
+        0.3821488334445338,
+        0.7576300583803873,
+        0.7236973909434559,
+        0.739563171333875
+      ],
+      "severity": "mild",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "moderate": {
+      "label": "lifelong/moderate",
+      "n_episodes": 5,
+      "mean_reward": 30.83359120310299,
+      "std_reward": 9.670620251837272,
+      "mean_confidence": 0.3956452427610916,
+      "mean_waypoints_reached": 0.2,
+      "mean_episode_length": 5.6,
+      "total_adaptations": 0,
+      "adaptation_rate": 0.0,
+      "rejected_episodes": 5,
+      "all_rewards": [
+        28.401186485270593,
+        35.06650860015477,
+        43.18952388950008,
+        13.985548853867668,
+        33.525188186721856
+      ],
+      "all_confidences": [
+        0.447874867339477,
+        0.4033957315291977,
+        0.36927173707207306,
+        0.3609154550861602,
+        0.3967684227785503
+      ],
+      "severity": "moderate",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "severe": {
+      "label": "lifelong/severe",
+      "n_episodes": 5,
+      "mean_reward": 61.71624798064818,
+      "std_reward": 87.35760922073597,
+      "mean_confidence": 0.4672498474589716,
+      "mean_waypoints_reached": 0.0,
+      "mean_episode_length": 13.6,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 4,
+      "all_rewards": [
+        19.417954181361573,
+        11.047466391380542,
+        8.652196430060558,
+        235.53347258043337,
+        33.93015032000483
+      ],
+      "all_confidences": [
+        0.4188894301559298,
+        0.39000987733459347,
+        0.39635790012585526,
+        0.40533982053484097,
+        0.7256522091436385
+      ],
+      "severity": "severe",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    }
+  },
+  "forgetting": {
+    "baseline_clean": {
+      "mean_reward": 1305.2862745160114,
+      "std_reward": 159.66953108854113,
+      "mean_episode_length": 452.0,
+      "mean_waypoints_reached": 1.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        1129.7490188439317,
+        1185.1482354620605,
+        1233.776449535298,
+        1419.239735804858,
+        1558.5179329339082
+      ],
+      "all_waypoints": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "n_episodes": 5
+    },
+    "adapted_clean": {
+      "mean_reward": 1298.763389807141,
+      "std_reward": 243.9421945887175,
+      "mean_episode_length": 425.8,
+      "mean_waypoints_reached": 0.6,
+      "success_rate": 0.0,
+      "all_rewards": [
+        1362.1127955585046,
+        977.9949494724043,
+        1152.3771786169207,
+        1291.2917414758576,
+        1710.0402839120177
+      ],
+      "all_waypoints": [
+        1,
+        1,
+        1,
+        0,
+        0
+      ],
+      "n_episodes": 5
+    },
+    "reward_drop": 6.522884708870379,
+    "reward_drop_pct": 0.49972828460860097,
+    "waypoint_drop": 0.4,
+    "forgetting_detected": false
+  },
+  "comparison": {
+    "clean": {
+      "baseline_reward": 1212.6607077576887,
+      "lifelong_reward": 1443.251924713101,
+      "reward_improvement": 230.5912169554124,
+      "reward_improvement_pct": 19.015311989599702,
+      "baseline_waypoints": 1.0,
+      "lifelong_waypoints": 1.0,
+      "waypoint_improvement": 0.0,
+      "baseline_success_rate": 0.0,
+      "lifelong_success_rate": 0.0,
+      "adaptation_rate": 0.2,
+      "total_adaptations": 1,
+      "mean_confidence": 0.6666662256371734
+    },
+    "mild": {
+      "baseline_reward": 106.87547517322886,
+      "lifelong_reward": 281.6094769771804,
+      "reward_improvement": 174.73400180395154,
+      "reward_improvement_pct": 163.49307595660682,
+      "baseline_waypoints": 0.6,
+      "lifelong_waypoints": 0.4,
+      "waypoint_improvement": -0.19999999999999996,
+      "baseline_success_rate": 0.2,
+      "lifelong_success_rate": 0.0,
+      "adaptation_rate": 0.2,
+      "total_adaptations": 1,
+      "mean_confidence": 0.6033718601482005
+    },
+    "moderate": {
+      "baseline_reward": 94.50140663375161,
+      "lifelong_reward": 30.83359120310299,
+      "reward_improvement": -63.66781543064862,
+      "reward_improvement_pct": -67.37234682378724,
+      "baseline_waypoints": 0.0,
+      "lifelong_waypoints": 0.2,
+      "waypoint_improvement": 0.2,
+      "baseline_success_rate": 0.0,
+      "lifelong_success_rate": 0.0,
+      "adaptation_rate": 0.0,
+      "total_adaptations": 0,
+      "mean_confidence": 0.3956452427610916
+    },
+    "severe": {
+      "baseline_reward": 65.82466185481304,
+      "lifelong_reward": 61.71624798064818,
+      "reward_improvement": -4.108413874164867,
+      "reward_improvement_pct": -6.241450785158061,
+      "baseline_waypoints": 0.0,
+      "lifelong_waypoints": 0.0,
+      "waypoint_improvement": 0.0,
+      "baseline_success_rate": 0.0,
+      "lifelong_success_rate": 0.0,
+      "adaptation_rate": 0.2,
+      "total_adaptations": 1,
+      "mean_confidence": 0.4672498474589716
+    }
+  },
+  "summary": {
+    "total_time_sec": 43.04693913459778,
+    "n_eval_episodes": 5,
+    "severity_levels": [
+      "clean",
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "baseline_model": "runs/baseline/best_model.pt",
+    "device": "cpu"
+  }
+}
