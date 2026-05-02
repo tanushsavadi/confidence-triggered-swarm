@@ -92,7 +92,7 @@ class PPOAgent:
         )
 
     def select_actions(
-        self, obs_multi: np.ndarray
+        self, obs_multi: np.ndarray, deterministic: bool = False
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Select actions for all drones.
 
@@ -100,7 +100,9 @@ class PPOAgent:
         """
         obs_tensor = torch.as_tensor(obs_multi, dtype=torch.float32).to(self.device)
         with torch.no_grad():
-            actions, log_probs, values, entropies = self.policy.act(obs_tensor)
+            actions, log_probs, values, entropies = self.policy.act(
+                obs_tensor, deterministic=deterministic
+            )
         return (
             actions.cpu().numpy(),
             log_probs.cpu().numpy(),

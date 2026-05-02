@@ -1,0 +1,120 @@
+{
+  "lifelong": {
+    "clean": {
+      "label": "lifelong/clean",
+      "n_episodes": 5,
+      "mean_reward": 2010.3113614530077,
+      "std_reward": 199.35543125709026,
+      "mean_confidence": 0.7407763446360669,
+      "mean_waypoints_reached": 1.0,
+      "mean_episode_length": 452.0,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 0,
+      "all_rewards": [
+        2154.8061022101783,
+        2201.4089116987393,
+        1791.0797354783617,
+        1744.1844876936548,
+        2160.0775701841053
+      ],
+      "all_confidences": [
+        0.4966613718036407,
+        0.8241402352454068,
+        0.7966626565733333,
+        0.7701357124897328,
+        0.8162817470682211
+      ],
+      "severity": "clean",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "mild": {
+      "label": "lifelong/mild",
+      "n_episodes": 5,
+      "mean_reward": 160.20861376120953,
+      "std_reward": 221.84300462760515,
+      "mean_confidence": 0.6413578471182974,
+      "mean_waypoints_reached": 0.6,
+      "mean_episode_length": 76.2,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 4,
+      "all_rewards": [
+        44.373565333724606,
+        603.7284488287946,
+        43.07073119286775,
+        60.30675500604618,
+        49.563568444614546
+      ],
+      "all_confidences": [
+        0.43926186221987173,
+        0.49946622575759503,
+        0.7151461675261074,
+        0.7647845649350656,
+        0.7881304151528471
+      ],
+      "severity": "mild",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "moderate": {
+      "label": "lifelong/moderate",
+      "n_episodes": 5,
+      "mean_reward": 20.493086336895647,
+      "std_reward": 6.199917307063902,
+      "mean_confidence": 0.4093241557911593,
+      "mean_waypoints_reached": 0.0,
+      "mean_episode_length": 4.4,
+      "total_adaptations": 0,
+      "adaptation_rate": 0.0,
+      "rejected_episodes": 5,
+      "all_rewards": [
+        14.30850323201698,
+        17.95052427185225,
+        30.032858451606437,
+        14.788483057398796,
+        25.38506267160377
+      ],
+      "all_confidences": [
+        0.4056873680168475,
+        0.4033862547523347,
+        0.4457294594455143,
+        0.40462822422233163,
+        0.3871894725187687
+      ],
+      "severity": "moderate",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    },
+    "severe": {
+      "label": "lifelong/severe",
+      "n_episodes": 5,
+      "mean_reward": 72.4763084185881,
+      "std_reward": 113.20888165003771,
+      "mean_confidence": 0.41378636452704776,
+      "mean_waypoints_reached": 0.0,
+      "mean_episode_length": 14.4,
+      "total_adaptations": 1,
+      "adaptation_rate": 0.2,
+      "rejected_episodes": 4,
+      "all_rewards": [
+        13.804912006529065,
+        10.263031565719261,
+        11.405760029835767,
+        28.389181759055294,
+        298.5186567318011
+      ],
+      "all_confidences": [
+        0.3999683683160061,
+        0.39463646224623256,
+        0.40444254848415584,
+        0.4103300993188739,
+        0.45955434426997044
+      ],
+      "severity": "severe",
+      "mode": "lifelong",
+      "success_rate": 0.0
+    }
+  }
+}

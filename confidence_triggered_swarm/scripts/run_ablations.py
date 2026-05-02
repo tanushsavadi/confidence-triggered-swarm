@@ -81,7 +81,15 @@ def _run_frozen(config: dict, obs_dim: int, act_dim: int, device: str) -> Dict[s
     agent.load(BASELINE_MODEL)
 
     env = create_env(config, severity=SEVERITY, gui=False)
-    results = run_frozen_episodes(agent, env, N_EPISODES, device=device, label="frozen/severe")
+    deterministic_eval = config.get("evaluation", {}).get("deterministic_actions", True)
+    results = run_frozen_episodes(
+        agent,
+        env,
+        N_EPISODES,
+        device=device,
+        label="frozen/severe",
+        deterministic=deterministic_eval,
+    )
     env.close()
 
     # add fields that lifelong results have, for consistent table formatting

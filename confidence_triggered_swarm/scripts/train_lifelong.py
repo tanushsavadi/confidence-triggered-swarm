@@ -151,6 +151,7 @@ def main() -> None:
     severity_levels = ["clean", "mild", "moderate", "severe"]
     frozen_results: Dict[str, Dict[str, Any]] = {}
     lifelong_results: Dict[str, Dict[str, Any]] = {}
+    deterministic_eval = config.get("evaluation", {}).get("deterministic_actions", True)
 
     # phase 1: frozen baseline on each severity
     print("\n--- PHASE 1: Frozen Baseline ---")
@@ -164,6 +165,7 @@ def main() -> None:
         results = run_frozen_episodes(
             frozen_agent, eval_env, n_eval_episodes,
             device=device_str, label=f"frozen/{severity}",
+            deterministic=deterministic_eval,
         )
         results["severity"] = severity
         results["mode"] = "frozen"

@@ -1,0 +1,17 @@
+adaptation:
+  method: ppo_episode
+  deterministic_rollouts: true
+  confidence_threshold: 0.60
+  confidence_window: 15
+  min_episode_steps: 10
+  min_adapt_reward: -10.0
+  adapt_batch_size: 32
+  adapt_epochs: 5
+  adapt_lr: 1.0e-4
+  min_advantage_quantile: 0.6
+  clean_replay_ratio: 0.3
+  kl_anchor_coef: 0.5
+  ewc_lambda: 1000
+
+evaluation:
+  deterministic_actions: true

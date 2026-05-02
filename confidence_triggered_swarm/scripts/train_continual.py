@@ -93,6 +93,7 @@ def main() -> None:
         if args.n_eval_episodes is not None
         else eval_cfg.get("n_eval_episodes", 50)
     )
+    deterministic_eval = eval_cfg.get("deterministic_actions", True)
     gui = args.gui or env_cfg.get("gui", False)
 
     device_str = train_cfg.get("device", "auto")
@@ -195,6 +196,7 @@ def main() -> None:
             n_adapt,
             device=device_str,
             label=f"continual/frozen/{phase_sev}",
+            deterministic=deterministic_eval,
         )
         per_episode["frozen"].extend(fr_stats.get("all_rewards", []))
 
@@ -209,6 +211,7 @@ def main() -> None:
                 n_eval,
                 device=device_str,
                 label=f"R_ll[{i},{j}] {eval_sev}",
+                deterministic=deterministic_eval,
             )
             fr_r = run_frozen_episodes(
                 frozen_agent,
@@ -216,6 +219,7 @@ def main() -> None:
                 n_eval,
                 device=device_str,
                 label=f"R_fr[{i},{j}] {eval_sev}",
+                deterministic=deterministic_eval,
             )
             R_ll[i, j] = ll_r["mean_reward"]
             R_fr[i, j] = fr_r["mean_reward"]

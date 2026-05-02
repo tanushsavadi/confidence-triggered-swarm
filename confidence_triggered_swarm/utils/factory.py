@@ -113,6 +113,7 @@ def run_frozen_episodes(
     n_episodes: int,
     device: str = "cpu",
     label: str = "",
+    deterministic: bool = False,
 ) -> Dict[str, Any]:
     """Run episodes with frozen policy — no gradient updates.
 
@@ -131,7 +132,9 @@ def run_frozen_episodes(
         step_count = 0
 
         while not done:
-            actions, _, _, _ = agent.select_actions(obs)
+            actions, _, _, _ = agent.select_actions(
+                obs, deterministic=deterministic
+            )
             obs, reward, terminated, truncated, info = env.step(actions)
             done = bool(terminated or truncated)
             ep_reward += float(reward)

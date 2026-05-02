@@ -1,0 +1,5 @@
+adaptation:
+  deterministic_rollouts: true
+
+evaluation:
+  deterministic_actions: true

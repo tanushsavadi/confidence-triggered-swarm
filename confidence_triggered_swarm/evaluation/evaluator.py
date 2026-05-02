@@ -366,6 +366,9 @@ class Evaluator:
     ) -> Dict[str, Any]:
         """Run episodes with frozen policy (no gradient updates)."""
         agent.policy.eval()
+        deterministic = self.config.get("evaluation", {}).get(
+            "deterministic_actions", True
+        )
 
         all_rewards: List[float] = []
         all_lengths: List[int] = []
@@ -378,7 +381,9 @@ class Evaluator:
             step_count = 0
 
             while not done:
-                actions, _, _, _ = agent.select_actions(obs)
+                actions, _, _, _ = agent.select_actions(
+                    obs, deterministic=deterministic
+                )
                 obs, reward, terminated, truncated, info = env.step(actions)
                 done = bool(terminated or truncated)
                 ep_reward += float(reward)

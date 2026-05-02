@@ -1,0 +1,290 @@
+[
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 1913.6706504645415,
+        "mean_waypoints_reached": 1.0,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 139.80501538270664,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 9.2,
+        "mean_reward": 51.00073846200284,
+        "mean_waypoints_reached": 0.4,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 28.51934165626648,
+        "total_adaptations": 0
+      },
+      "moderate": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 4.4,
+        "mean_reward": 24.05444491126779,
+        "mean_waypoints_reached": 0.2,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 13.764512884075433,
+        "total_adaptations": 0
+      },
+      "severe": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 3.6,
+        "mean_reward": 17.74368869968483,
+        "mean_waypoints_reached": 0.1,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 9.966550878175415,
+        "total_adaptations": 0
+      }
+    },
+    "clean_reward": 1913.6706504645415,
+    "mean_surprise_reward": 30.932957357651826,
+    "name": "current_default",
+    "run_dir": "runs/improved_sweep_10ep/current_default"
+  },
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 1913.6706504645415,
+        "mean_waypoints_reached": 1.0,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 139.80501538270664,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 101.2,
+        "mean_reward": 406.0530592872186,
+        "mean_waypoints_reached": 0.4,
+        "rejected_episodes": 4,
+        "skipped_adaptations": 0,
+        "std_reward": 432.2937333644514,
+        "total_adaptations": 1
+      },
+      "moderate": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 26.6,
+        "mean_reward": 115.53124236892154,
+        "mean_waypoints_reached": 0.3,
+        "rejected_episodes": 7,
+        "skipped_adaptations": 0,
+        "std_reward": 143.84771401386854,
+        "total_adaptations": 1
+      },
+      "severe": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 19.5,
+        "mean_reward": 83.9679257639601,
+        "mean_waypoints_reached": 0.0,
+        "rejected_episodes": 7,
+        "skipped_adaptations": 0,
+        "std_reward": 103.47830423100008,
+        "total_adaptations": 1
+      }
+    },
+    "clean_reward": 1913.6706504645415,
+    "mean_surprise_reward": 201.85074247336675,
+    "name": "deterministic_only",
+    "run_dir": "runs/improved_sweep_10ep/deterministic_only"
+  },
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 1995.7534780272367,
+        "mean_waypoints_reached": 0.9,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 165.71574420610239,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 28.5,
+        "mean_reward": 107.32254383561649,
+        "mean_waypoints_reached": 0.4,
+        "rejected_episodes": 7,
+        "skipped_adaptations": 0,
+        "std_reward": 172.45142325116112,
+        "total_adaptations": 1
+      },
+      "moderate": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 4.4,
+        "mean_reward": 26.927192974962043,
+        "mean_waypoints_reached": 0.3,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 16.87013561675999,
+        "total_adaptations": 0
+      },
+      "severe": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 3.8,
+        "mean_reward": 21.55772934306599,
+        "mean_waypoints_reached": 0.2,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 19.699352819403714,
+        "total_adaptations": 0
+      }
+    },
+    "clean_reward": 1995.7534780272367,
+    "mean_surprise_reward": 51.93582205121484,
+    "name": "ppo_episode",
+    "run_dir": "runs/improved_sweep_10ep/ppo_episode"
+  },
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 2092.8136045279452,
+        "mean_waypoints_reached": 0.4,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 169.60674327274774,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 40.7,
+        "mean_reward": 127.03007735850906,
+        "mean_waypoints_reached": 0.1,
+        "rejected_episodes": 4,
+        "skipped_adaptations": 0,
+        "std_reward": 136.41652037229963,
+        "total_adaptations": 1
+      },
+      "moderate": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 20.8,
+        "mean_reward": 99.4217790893788,
+        "mean_waypoints_reached": 0.2,
+        "rejected_episodes": 8,
+        "skipped_adaptations": 0,
+        "std_reward": 130.7312364481174,
+        "total_adaptations": 1
+      },
+      "severe": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 3.0,
+        "mean_reward": 12.608896499356742,
+        "mean_waypoints_reached": 0.0,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 3.5144679628435824,
+        "total_adaptations": 0
+      }
+    },
+    "clean_reward": 2092.8136045279452,
+    "mean_surprise_reward": 79.68691764908154,
+    "name": "ppo_conservative",
+    "run_dir": "runs/improved_sweep_10ep/ppo_conservative"
+  },
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 2133.50313132685,
+        "mean_waypoints_reached": 0.3,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 61.47428886075568,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 71.1,
+        "mean_reward": 315.6359555651527,
+        "mean_waypoints_reached": 0.4,
+        "rejected_episodes": 4,
+        "skipped_adaptations": 0,
+        "std_reward": 314.35426538778233,
+        "total_adaptations": 1
+      },
+      "moderate": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 22.2,
+        "mean_reward": 106.43658555430571,
+        "mean_waypoints_reached": 0.0,
+        "rejected_episodes": 7,
+        "skipped_adaptations": 0,
+        "std_reward": 150.48281610414597,
+        "total_adaptations": 1
+      },
+      "severe": {
+        "adaptation_rate": 0.0,
+        "mean_episode_length": 3.0,
+        "mean_reward": 13.83062007214493,
+        "mean_waypoints_reached": 0.0,
+        "rejected_episodes": 10,
+        "skipped_adaptations": 0,
+        "std_reward": 5.596907022726129,
+        "total_adaptations": 0
+      }
+    },
+    "clean_reward": 2133.50313132685,
+    "mean_surprise_reward": 145.30105373053445,
+    "name": "ppo_moderate",
+    "run_dir": "runs/improved_sweep_10ep/ppo_moderate"
+  },
+  {
+    "by_severity": {
+      "clean": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 452.0,
+        "mean_reward": 1979.965882681266,
+        "mean_waypoints_reached": 0.9,
+        "rejected_episodes": 0,
+        "skipped_adaptations": 0,
+        "std_reward": 153.73727679841122,
+        "total_adaptations": 1
+      },
+      "mild": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 89.2,
+        "mean_reward": 344.60335102263025,
+        "mean_waypoints_reached": 0.7,
+        "rejected_episodes": 5,
+        "skipped_adaptations": 0,
+        "std_reward": 469.03085250225945,
+        "total_adaptations": 1
+      },
+      "moderate": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 24.6,
+        "mean_reward": 117.21450759815389,
+        "mean_waypoints_reached": 0.3,
+        "rejected_episodes": 5,
+        "skipped_adaptations": 0,
+        "std_reward": 135.65711532077722,
+        "total_adaptations": 1
+      },
+      "severe": {
+        "adaptation_rate": 0.1,
+        "mean_episode_length": 9.2,
+        "mean_reward": 48.06119885561062,
+        "mean_waypoints_reached": 0.2,
+        "rejected_episodes": 9,
+        "skipped_adaptations": 0,
+        "std_reward": 71.8938872550099,
+        "total_adaptations": 1
+      }
+    },
+    "clean_reward": 1979.965882681266,
+    "mean_surprise_reward": 169.9596858254649,
+    "name": "reward_weighted_rescue",
+    "run_dir": "runs/improved_sweep_10ep/reward_weighted_rescue"
+  }
+]

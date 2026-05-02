@@ -1,0 +1,100 @@
+{
+  "baseline": {
+    "clean": {
+      "mean_reward": 2043.0289294887966,
+      "std_reward": 144.53290067627992,
+      "mean_episode_length": 452.0,
+      "mean_waypoints_reached": 1.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        2154.8061022101783,
+        1910.1112322116157,
+        2213.6515928087756,
+        2098.6776567843676,
+        1837.898063429046
+      ],
+      "all_waypoints": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "n_episodes": 5,
+      "severity": "clean",
+      "mode": "frozen"
+    },
+    "mild": {
+      "mean_reward": 467.24291698628423,
+      "std_reward": 390.8308586687539,
+      "mean_episode_length": 132.2,
+      "mean_waypoints_reached": 0.6,
+      "success_rate": 0.0,
+      "all_rewards": [
+        391.37272793358073,
+        863.0174294985259,
+        42.67549718864743,
+        63.715180794238215,
+        975.433749516429
+      ],
+      "all_waypoints": [
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "n_episodes": 5,
+      "severity": "mild",
+      "mode": "frozen"
+    },
+    "moderate": {
+      "mean_reward": 23.41180399791643,
+      "std_reward": 6.480595789990401,
+      "mean_episode_length": 4.8,
+      "mean_waypoints_reached": 0.0,
+      "success_rate": 0.0,
+      "all_rewards": [
+        17.223514491523805,
+        24.075111899515907,
+        35.614663686766264,
+        20.229217347034602,
+        19.91651256474155
+      ],
+      "all_waypoints": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "n_episodes": 5,
+      "severity": "moderate",
+      "mode": "frozen"
+    },
+    "severe": {
+      "mean_reward": 15.624321611192968,
+      "std_reward": 11.105912266837219,
+      "mean_episode_length": 2.8,
+      "mean_waypoints_reached": 0.2,
+      "success_rate": 0.0,
+      "all_rewards": [
+        9.653364077798328,
+        10.119713111936619,
+        37.80602036626349,
+        11.112382232671127,
+        9.430128267295274
+      ],
+      "all_waypoints": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "n_episodes": 5,
+      "severity": "severe",
+      "mode": "frozen"
+    }
+  }
+}

@@ -41,6 +41,8 @@ policy:
   mc_samples: 10                   # MC forward passes for confidence
 
 adaptation:
+  method: reward_weighted_bc
+  deterministic_rollouts: true
   confidence_threshold: 0.5        # trigger when confidence < this
   adapt_epochs: 5
   adapt_lr: 1.0e-4
@@ -50,8 +52,12 @@ adaptation:
   confidence_window: 30            # rolling window — smaller = faster triggering
   min_episode_steps: 30            # min steps for episode to qualify
   min_adapt_reward: -5.0
+  min_advantage_quantile: 0.5
   clean_replay_ratio: 0.2
   kl_anchor_coef: 0.5
+  ppo_clip_epsilon: 0.2
+  value_coef: 0.5
+  entropy_coef: 0.005
 
 # surprise presets are defined in SurpriseConfig.from_severity()
 # these are just defaults for manual config
@@ -63,6 +69,7 @@ surprise:
 
 evaluation:
   n_eval_episodes: 50
+  deterministic_actions: true
   checkpoint_dir: checkpoints/
   log_dir: logs/
   results_dir: results/

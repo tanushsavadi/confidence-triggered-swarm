@@ -1,0 +1,16 @@
+adaptation:
+  method: reward_weighted_bc
+  deterministic_rollouts: true
+  confidence_threshold: 0.65
+  confidence_window: 10
+  min_episode_steps: 8
+  min_adapt_reward: -20.0
+  adapt_batch_size: 16
+  adapt_epochs: 5
+  adapt_lr: 5.0e-5
+  clean_replay_ratio: 0.35
+  kl_anchor_coef: 0.8
+  ewc_lambda: 1500
+
+evaluation:
+  deterministic_actions: true
