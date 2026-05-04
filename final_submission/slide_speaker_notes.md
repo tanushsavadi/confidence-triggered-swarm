@@ -9,8 +9,8 @@ rehearsal script, not something to read word for word. Aim for about 11 minutes.
 - Do not read the slide text back to the audience.
 - Use each slide as evidence, then explain what the evidence means.
 - Keep a calm pace. It is better to say less clearly than to rush.
-- Keep the core claim honest. This is clean retention plus partial robustness
-  under post-training surprise.
+- Keep the core claim honest. The result is clean retention plus partial
+  robustness under post-training surprise.
 - Say clearly that the policy was trained clean only, then surprised after
   training.
 
@@ -37,12 +37,13 @@ Transition
 
 ## Slide 2 - Motivation - about 50 seconds
 
-"This slide is about why clean simulator performance is not enough.
+"Clean simulator performance is a useful starting point, but for drones it is
+not the full story.
 
-In the Problem section, the examples are all realistic ways a drone deployment
-can shift. Wind changes the physics. Sensor noise changes what the policy thinks
-it sees. Actuator weakness changes whether actions work as expected. Goal
-shifts change the task context.
+In the Problem section, the examples are all realistic ways deployment can
+shift. Wind changes the physics. Sensor noise changes what the policy thinks it
+sees. Actuator weakness changes whether actions work as expected. Goal shifts
+change the task context.
 
 The issue is that the two simple answers are not enough. Retraining every time
 is expensive. Updating freely can cause the policy to forget the clean formation
@@ -58,13 +59,13 @@ Transition
 
 ## Slide 3 - Task And Environment - about 60 seconds
 
-"This slide gives the setup. I will only focus on the details needed to
-interpret the results.
+"For the environment, the details I care about are the ones that affect how we
+read the results.
 
 The task uses two CF2X drones with a shared-policy IPPO setup in PyBullet. Each
 episode has 450 control steps, and each drone observes its state plus waypoint
-information. So this is a small setup, but it is still a real control problem,
-not just a toy point-mass task.
+information. So it is a small setup, but it is still a real control problem,
+not a toy point-mass task.
 
 The key design choice is in the note at the bottom. The baseline is trained on
 clean episodes only. The surprise suite is added after training.
@@ -105,8 +106,8 @@ Transition
 
 ## Slide 5 - Main Results - about 65 seconds
 
-"This is the main result slide. The thing to notice in the graph is the overall
-pattern.
+"For the main results, I would read the graph by looking at the pattern first,
+not by treating every number as equally important.
 
 Clean stays strong, which matters because adaptation should not damage the
 original task. Mild and severe show the clearest gains for the lifelong policy.
@@ -127,17 +128,18 @@ checks the clean skill directly."
 
 ## Slide 6 - Forgetting Analysis - about 50 seconds
 
-"This slide asks a different question. After adapting under severe surprise,
-does the policy still work on the original clean task?
+"The next question is whether adaptation helped by sacrificing the original
+skill. After adapting under severe surprise, does the policy still work on the
+original clean task?
 
 As the figure shows, clean reward after severe adaptation is still high. In this
 probe, it is even higher than before adaptation. I would not overclaim that as a
 general clean improvement. The safer interpretation is that there is no
 catastrophic forgetting in this run.
 
-The caveat on the slide matters. Waypoints are slightly lower after adaptation,
-so this is not a perfect improvement story. But the main signal is that the
-clean behavior did not collapse.
+There is one caveat. Waypoints are slightly lower after adaptation, so this is
+not a perfect improvement story. But the main signal is that the clean behavior
+did not collapse.
 
 That clean re-test is important because surprise recovery alone would not be
 enough if the original formation skill was damaged."
@@ -147,9 +149,9 @@ Transition
 
 ## Slide 7 - Continual Learning - about 65 seconds
 
-"This matrix is the strongest evidence for the forgetting story.
+"The matrix gives a stronger version of the forgetting check.
 
-The main thing to focus on is the clean column. Each row is after another
+I would read it by following the clean column. Each row is after another
 adaptation phase. If the policy were forgetting clean flight, that clean column
 would drop as we move downward.
 
@@ -167,7 +169,7 @@ Transition
 
 ## Slide 8 - Ablation Study - about 55 seconds
 
-"This slide prevents an overly simple conclusion.
+"The ablation result is useful because it keeps the conclusion honest.
 
 If we only wanted the highest severe reward in a short run, some ablations might
 look tempting. As shown in the figure, removing safeguards can raise the mean
@@ -187,7 +189,8 @@ Transition
 
 ## Slide 9 - Author Contributions - about 35 seconds
 
-"I will keep this brief because the slide already lists the split.
+"For contributions, the course asks us to be clear about who worked on what, so
+I want to state that directly.
 
 The technical implementation and experimental pipeline were primarily my work.
 That includes the environment, surprise wrapper, PPO and IPPO training,
@@ -206,7 +209,7 @@ Transition
 
 ## Slide 10 - Conclusion - about 70 seconds
 
-"This final slide separates the strong claim from the limitations.
+"To wrap up, I want to separate the strong claim from the limitations.
 
 The strong claim is that the pipeline works as an experimental framework. It
 trains a clean policy, exposes it to post-training surprises, adapts based on
@@ -214,9 +217,9 @@ confidence, and audits whether clean behavior survived. As shown in the
 achieved section, the clearest robustness gains are mild and severe, and the
 clean-skill checks are encouraging.
 
-The limitations are just as important. This is one seed, two drones, simplified
-simulation physics, and no hardware. Moderate surprise regresses, which means
-the adaptation trigger and objective need more work.
+The limitations are just as important. We only tested one seed, two drones,
+simplified simulation physics, and no hardware. Moderate surprise regresses,
+which means the adaptation trigger and objective need more work.
 
 The next steps are pretty clear. Multi-seed validation would test reliability.
 Larger swarms would test scaling. Better adaptation objectives could make the
