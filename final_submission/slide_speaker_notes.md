@@ -106,8 +106,8 @@ Transition
 
 ## Slide 5 - Main Results - about 65 seconds
 
-"For the main results, I would read the graph by looking at the pattern first,
-not by treating every number as equally important.
+"The main results have a clear pattern. The method helps in some conditions, but
+not all of them.
 
 Clean stays strong, which matters because adaptation should not damage the
 original task. Mild and severe show the clearest gains for the lifelong policy.
@@ -119,8 +119,8 @@ there, which tells us this is not a universal robustness fix. It helps in some
 shifted conditions, but the trigger and update objective still need work.
 
 So the careful one-sentence takeaway is partial robustness while preserving
-clean behavior. Also, these are single-seed results with seed 42, so I would
-treat the graph as directional evidence, not a statistically final conclusion."
+clean behavior. These are single-seed results with seed 42, so the graph is
+directional evidence, not a statistically final conclusion."
 
 Transition
 "Since adaptation can help reward but still cause forgetting, the next slide
@@ -133,9 +133,9 @@ skill. After adapting under severe surprise, does the policy still work on the
 original clean task?
 
 As the figure shows, clean reward after severe adaptation is still high. In this
-probe, it is even higher than before adaptation. I would not overclaim that as a
-general clean improvement. The safer interpretation is that there is no
-catastrophic forgetting in this run.
+probe, it is even higher than before adaptation. That does not mean severe
+adaptation generally improves clean flight. The safer interpretation is that
+there is no catastrophic forgetting in this run.
 
 There is one caveat. Waypoints are slightly lower after adaptation, so this is
 not a perfect improvement story. But the main signal is that the clean behavior
@@ -151,7 +151,7 @@ Transition
 
 "The matrix gives a stronger version of the forgetting check.
 
-I would read it by following the clean column. Each row is after another
+The clean column is the key part of this matrix. Each row is after another
 adaptation phase. If the policy were forgetting clean flight, that clean column
 would drop as we move downward.
 
@@ -185,12 +185,12 @@ conservative, and the quality gate protects the policy, but it also limits how
 much recovery can happen."
 
 Transition
-"Before the final takeaway, I want to briefly cover the contribution slide."
+"Before the final takeaway, here is the contribution split."
 
 ## Slide 9 - Author Contributions - about 35 seconds
 
-"For contributions, the course asks us to be clear about who worked on what, so
-I want to state that directly.
+"For contributions, the course asks us to be clear about who worked on what.
+The split is straightforward.
 
 The technical implementation and experimental pipeline were primarily my work.
 That includes the environment, surprise wrapper, PPO and IPPO training,
@@ -209,7 +209,8 @@ Transition
 
 ## Slide 10 - Conclusion - about 70 seconds
 
-"To wrap up, I want to separate the strong claim from the limitations.
+"To wrap up, the important distinction is between what this shows and what it
+does not show.
 
 The strong claim is that the pipeline works as an experimental framework. It
 trains a clean policy, exposes it to post-training surprises, adapts based on
