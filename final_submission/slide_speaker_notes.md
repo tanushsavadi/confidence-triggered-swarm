@@ -241,10 +241,87 @@ robustness."
 
 ## Likely Q&A Answers
 
+**What do PPO and IPPO mean in this project?**  
+The baseline is one clean-trained actor critic checkpoint. PPO is the learning
+algorithm that updates the policy. IPPO is the multi agent setup where each
+drone contributes its own rollout data while sharing the same policy weights.
+
 **Was it trained with surprises?**  
-No. The baseline PPO and IPPO policy was trained on clean `FormationAviary`
-only. Wind, noise, actuator weakness, dropout, and goal shifts were injected
+No. The clean baseline policy was trained only on `FormationAviary`. Wind,
+sensor noise, sensor dropout, actuator weakness, and goal shifts were injected
 after training during evaluation and adaptation.
+
+**Why use PPO?**  
+PPO is a stable actor critic policy gradient method for continuous control. It
+uses clipped policy updates, which helps keep training from changing the policy
+too aggressively in one update.
+
+**Why use IPPO instead of two separate policies?**  
+I wanted to test one shared swarm controller, not two unrelated controllers.
+Each drone still produces its own experience, but the shared policy learns from
+both drones.
+
+**Why not use MAPPO or a centralized critic?**  
+MAPPO would be a reasonable next step, but I kept IPPO because it is simpler and
+matched the project goal. The main idea I wanted to test was confidence
+triggered lifelong adaptation, not a new multi agent RL algorithm.
+
+**What is the frozen baseline?**  
+It is the clean checkpoint evaluated under each surprise level with no
+adaptation. It answers what happens if we train once and then do nothing when
+deployment conditions shift.
+
+**What is the lifelong policy?**  
+It starts from the same clean checkpoint as the frozen baseline. The difference
+is that it can update between episodes when confidence drops and the episode
+passes the data quality checks.
+
+**What exactly triggers adaptation?**  
+The confidence monitor combines action entropy with MC dropout variance. When
+confidence drops below the threshold over the monitoring window, the trainer can
+trigger an adaptation update.
+
+**What is MC dropout doing here?**  
+Dropout stays active during inference, and the policy is sampled multiple
+times. If those samples disagree, the policy is less certain about what action
+to take.
+
+**Why combine entropy and MC dropout?**  
+Entropy checks whether the action distribution is broad. MC dropout checks
+whether the network output changes across stochastic forward passes. Using both
+makes the trigger less dependent on one noisy signal.
+
+**What is the quality gate?**  
+The quality gate filters out episodes that are too short or too poor to learn
+from. The point is to avoid adapting from immediate crashes or useless
+trajectories.
+
+**What is reward weighted behavior cloning?**  
+It imitates actions from the adaptation buffer, but higher reward transitions
+get more weight. So the update learns more from the better surprise behavior
+instead of treating every transition equally.
+
+**What is EWC?**  
+EWC means Elastic Weight Consolidation. It penalizes changes to weights that
+were important for the clean task, which helps reduce catastrophic forgetting.
+
+**What is KL anchoring?**  
+KL anchoring penalizes the adapted policy when it moves too far from the clean
+policy distribution. It is another way to keep adaptation from drifting too far.
+
+**What is clean replay?**  
+Clean replay mixes clean task data into adaptation batches. That reminds the
+policy of the original formation behavior while it learns from surprise data.
+
+**How do the safeguards protect clean behavior?**  
+EWC protects important clean weights. KL anchoring keeps the action distribution
+near the clean policy. Clean replay keeps clean examples in the update. They
+all push against forgetting in different ways.
+
+**Why is clean retention such a big part of the project?**  
+If adaptation improves a surprise condition but destroys clean formation flight,
+then it is not really useful lifelong learning. The clean re-test checks that
+the original skill survived.
 
 **Why does moderate get worse while severe improves?**  
 The adaptation trigger and episode-quality gate are conservative. Moderate can
@@ -252,13 +329,109 @@ sit in a region where the policy is degraded but does not always produce enough
 useful adaptation data. Severe produces clearer low-confidence signals, but the
 result is still noisy and single-seed.
 
+**Does severe improving mean severe is easier than moderate?**  
+No. It means the trigger and adaptation data behaved better for severe in this
+seed. Severe may produce clearer low confidence signals, while moderate can be
+bad enough to hurt performance but not clear enough to trigger useful updates.
+
+**Can we claim statistical significance?**  
+No. The results are from one seed, so I would present them as directional
+evidence. Multi seed validation is the first thing I would do before making a
+stronger claim.
+
+**Why only one seed?**  
+Time and compute were the main constraints. The code is set up so more seeds can
+be run, but the current deck is honest that seed 42 is the reported run.
+
+**What environment values were used?**  
+The main setup uses two CF2X drones in PyBullet, VEL actions, KIN observations
+with waypoint information, 240 hertz physics, 30 hertz control, and 15 second
+episodes with 450 control steps.
+
+**What did the reward measure?**  
+The reward encourages waypoint progress, formation spacing, target height, and
+stable flight. It penalizes behavior that moves away from the intended formation
+or becomes unstable.
+
+**What does the continual learning matrix show?**  
+Rows are adaptation phases, and columns are evaluation settings. The clean
+column is important because it shows whether clean performance collapses after
+sequential adaptation.
+
+**What does remembering of 1.0 mean?**  
+It means the best clean task performance was retained according to that metric
+in the continual sequence. It supports the clean retention claim, but it does
+not prove the method is optimal overall.
+
 **Why keep safeguards if ablations sometimes get higher reward?**  
 Because the objective is not only severe reward. The objective is adaptation
 without forgetting. Removing safeguards can raise short-run reward but weakens
 the clean-skill protection that the project is testing.
+
+**Why does the full method have lower variance in the ablation?**  
+The safeguards restrict how far the policy can move. That can limit peak reward,
+but it also makes the update more stable in the severe surprise setting.
+
+**What is the strongest result?**  
+The strongest result is clean retention with partial robustness. Clean behavior
+survived after adaptation, and mild and severe surprise improved in the reported
+seed.
+
+**What is the weakest result?**  
+Moderate surprise got worse after lifelong adaptation. That is the clearest sign
+that the trigger and adaptation objective need more work.
 
 **What is novel here?**  
 The novelty is the integrated pipeline. A post-training surprise benchmark,
 dual-signal confidence trigger, between-episode adaptation with anti-forgetting
 constraints, and explicit clean-after-surprise forgetting audits for the drone
 swarm setting.
+
+**Is this domain randomization?**  
+No. Domain randomization would train the baseline across many randomized
+conditions. Here the baseline is trained clean, and surprises are introduced
+after training to test adaptation after distribution shift.
+
+**Is this sim to real?**  
+Not yet. It is a simulation study designed around post-training shift. The next
+step would be stronger validation in simulation before moving toward hardware.
+
+**How does this connect to neuroscience?**  
+The connection is the idea of gated plasticity. The policy does not update all
+the time. A confidence signal decides when adaptation should turn on, while the
+safeguards protect older behavior from being overwritten.
+
+**Why use drones for this project?**  
+Drones make the problem concrete because small dynamics changes can matter a
+lot. Wind, noisy sensing, and actuator weakness are also intuitive deployment
+shifts for an adaptive controller.
+
+**What would you improve first?**  
+I would improve the adaptation trigger and data selection. The moderate result
+suggests the method needs a better way to tell the difference between useful
+surprise experience and experience that should not be learned from.
+
+**What would you run next if you had more time?**  
+I would run multiple seeds, increase the swarm size, compare against stronger
+multi agent baselines, and test a better adaptation objective than reward
+weighted behavior cloning alone.
+
+**Could this scale beyond two drones?**  
+The code structure should support larger swarms, but I would not claim scaling
+from these results alone. Larger swarms would need direct experiments because
+coordination and credit assignment become harder.
+
+**Could the confidence signal be wrong?**  
+Yes. Confidence is only a proxy for deployment shift. That is why the quality
+gate and clean retention checks are important, and why improving calibration is
+a major next step.
+
+**What did Tanush do?**  
+The technical implementation and experimental pipeline were primarily my work,
+including the environment, surprise wrapper, training, confidence monitor,
+adaptation loop, safeguards, evaluations, figures, and deck.
+
+**What should I say if someone asks for the one sentence version?**  
+I trained a clean two drone IPPO controller, exposed it to post-training
+surprises, and tested whether confidence triggered adaptation could recover some
+performance without erasing the original clean formation skill.
