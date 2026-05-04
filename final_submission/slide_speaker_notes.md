@@ -33,52 +33,53 @@ training, adapt only when confidence drops, and then check whether the original
 behavior survived."
 
 Transition
-"I will start with why this post-training surprise setting matters."
+"I will start with why I framed the project around post-training surprise."
 
 ## Slide 2 - Motivation - about 50 seconds
 
-"Clean simulator performance is a useful starting point, but for drones it is
-not the full story.
+"Clean simulator performance is only the starting point. For drones, the real
+question is what happens after training when the environment stops matching the
+clean simulator.
 
-In the Problem section, the examples are all realistic ways deployment can
-shift. Wind changes the physics. Sensor noise changes what the policy thinks it
-sees. Actuator weakness changes whether actions work as expected. Goal shifts
-change the task context.
+When I built the surprise setup, I wanted it to cover changes a policy could
+actually face after deployment. Wind changes the dynamics. Sensor noise changes
+what the policy observes. Actuator weakness changes how much control the drone
+really has. Goal shifts test whether the policy can handle a changed mission
+context.
 
-The issue is that the two simple answers are not enough. Retraining every time
-is expensive. Updating freely can cause the policy to forget the clean formation
-skill.
+That is why I built the method around three steps. Detect when confidence drops,
+adapt only from usable experience, and protect the clean policy while updating.
+Retraining after every shift is expensive, and updating freely can erase the
+formation skill we trained for.
 
-In Our Approach, the three pieces are detect low confidence, adapt only from
-usable experience, and protect the original clean policy. The important part is
-the combination. Confidence starts the update, the quality gate filters bad
-episodes, and the anti-forgetting terms keep the update from drifting too far."
+So the point of this project is not just to make the surprise environment harder.
+The point is to test whether a clean-trained policy can notice that shift, adapt
+to it, and still remember the original task."
 
 Transition
-"With that motivation, here is the concrete drone task."
+"That leads into the drone task I used to test the idea."
 
 ## Slide 3 - Task And Environment - about 60 seconds
 
-"For the environment, the details I care about are the ones that affect how we
-read the results.
+"For the environment, I kept the setup small enough to run end to end, but still
+grounded in drone control.
 
-The task uses two CF2X drones with a shared-policy IPPO setup in PyBullet. Each
-episode has 450 control steps, and each drone observes its state plus waypoint
-information. So it is a small setup, but it is still a real control problem,
-not a toy point-mass task.
+I used two CF2X drones in PyBullet with a shared IPPO policy. Each episode gives
+the policy 450 control steps, and each drone observes both its state and
+waypoint information. So the policy has enough context to fly the route, but the
+surprises can still break the behavior after training.
 
-The key design choice is in the note at the bottom. The baseline is trained on
-clean episodes only. The surprise suite is added after training.
+The most important design choice is that baseline training stays clean. I did
+not train the baseline with wind, sensor noise, actuator weakness, or goal
+shifts mixed in. Those are added only after training, so the evaluation is really
+testing how the learned clean controller handles deployment shift.
 
 As you can see in the table, the severities add more shift as we move from mild
-to moderate to severe. That is what lets us test whether the lifelong layer can
-recover after the clean policy has already been learned.
-
-The reward section tells us what success means. The drones need to move through
-waypoints while keeping formation and avoiding unstable states."
+to moderate to severe. The reward then checks whether the drones still move
+through waypoints while keeping formation and avoiding unstable states."
 
 Transition
-"Now I will explain how the adaptation layer decides when to update."
+"Next, I will show how I made the policy decide when to adapt."
 
 ## Slide 4 - Method - about 70 seconds
 
