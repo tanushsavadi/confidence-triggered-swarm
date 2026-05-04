@@ -10,12 +10,11 @@ For a broader artifact map, read `../docs/artifact_guide.md`.
 
 | File | Purpose |
 |---|---|
-| `confidence_triggered_swarm_final_presentation.pptx` | Editable 12-slide PowerPoint deck generated from canonical figures/results. |
+| `confidence_triggered_swarm_premium.pptx` | Editable 10-slide PowerPoint deck for the final 10-12 minute presentation. |
 | `final_report.tex` | NeurIPS-style report draft tied to canonical JSON outputs and figures. |
 | `references.bib` | BibTeX entries used by the report. |
 | `slides_10_12min_outline.md` | Timed 10-12 minute presentation plan with figure mapping. |
-| `slide_speaker_notes.md` | Speaker notes for the generated 12-slide deck. |
-| `deck_source/` | Artifact-tool slide source used to rebuild the PPTX. |
+| `slide_speaker_notes.md` | Complete rehearsal script for the premium 10-slide deck. |
 
 ## What Still Needs Human Input
 
@@ -24,7 +23,7 @@ For a broader artifact map, read `../docs/artifact_guide.md`.
    division of work.
 3. Compile the report and confirm it is 5-9 pages including figures, excluding
    references.
-4. Rehearse the generated 12-slide deck against the 10-12 minute timing plan.
+4. Rehearse the premium 10-slide deck against the 10-12 minute timing plan.
 
 ## Build the Report
 
@@ -57,27 +56,23 @@ From the repository root:
 The editable deck is already generated:
 
 ```text
-final_submission/confidence_triggered_swarm_final_presentation.pptx
+final_submission/confidence_triggered_swarm_premium.pptx
 ```
 
 It is designed for the May 4, 2026 presentation window and should be presented
 in about 11 minutes, with a hard cap of 12 minutes. It uses PNG files from
 `../runs/professor_ready/` as proof objects:
 
-- `fig2_degradation.png` for the problem setup.
 - `fig1_frozen_vs_lifelong.png` for the main result.
 - `fig4_forgetting.png` for clean retention after severe adaptation.
 - `fig6_continual_matrix.png` for the key continual-learning answer.
 - `fig3_ablations.png` for safeguard/tuning discussion.
-- `fig5_training_over_time.png` for the sequential training trace.
-- `fig8_cl_metrics.png` for continual-learning metrics and limitations.
 
 Use `fig3_ablations.png`, `fig5_training_over_time.png`, and
 `fig7_clean_retention.png` as backup or appendix slides.
 
 Speaker notes are in `slide_speaker_notes.md`. Timing is in
-`slides_10_12min_outline.md`. Rebuild instructions are in
-`deck_source/README.md`.
+`slides_10_12min_outline.md`.
 
 ## Readiness Check
 

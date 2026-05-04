@@ -189,15 +189,15 @@ Use these files for the slide deck:
 | Fig 7 | `runs/professor_ready/fig7_clean_retention.png` | Clean retention across phases |
 | Fig 8 | `runs/professor_ready/fig8_cl_metrics.png` | BWT, FWT, remembering, average reward |
 
-An editable 12-slide PPTX for the May 4, 2026, 10-12 minute presentation has
+An editable 10-slide PPTX for the May 4, 2026, 10-12 minute presentation has
 already been generated at:
 
 ```text
-final_submission/confidence_triggered_swarm_final_presentation.pptx
+final_submission/confidence_triggered_swarm_premium.pptx
 ```
 
 Detailed slide timing is in `final_submission/slides_10_12min_outline.md`.
-Speaker notes are in `final_submission/slide_speaker_notes.md`.
+The complete rehearsal script is in `final_submission/slide_speaker_notes.md`.
 Artifact-by-artifact guidance is in `docs/artifact_guide.md`.
 
 Regenerate all figures from saved JSON outputs:

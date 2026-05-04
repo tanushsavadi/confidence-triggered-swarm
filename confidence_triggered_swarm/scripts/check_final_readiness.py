@@ -18,6 +18,8 @@ from typing import Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
 FINAL_DIR = ROOT / "final_submission"
+CANONICAL_DECK = FINAL_DIR / "confidence_triggered_swarm_premium.pptx"
+EXPECTED_DECK_SLIDES = 10
 
 
 def _status(label: str, ok: bool, detail: str, warn: bool = False) -> Tuple[str, str]:
@@ -70,9 +72,10 @@ def _author_contrib_done() -> Tuple[str, str]:
 
 
 def _pptx_slide_count() -> Tuple[str, str]:
-    deck = FINAL_DIR / "confidence_triggered_swarm_final_presentation.pptx"
+    deck = CANONICAL_DECK
     if not deck.exists():
-        return "FAIL", "[FAIL] presentation deck: pptx missing"
+        rel = deck.relative_to(ROOT)
+        return "FAIL", f"[FAIL] presentation deck: pptx missing ({rel})"
     try:
         with zipfile.ZipFile(deck) as zf:
             slides = [
@@ -82,8 +85,11 @@ def _pptx_slide_count() -> Tuple[str, str]:
             ]
     except zipfile.BadZipFile:
         return "FAIL", "[FAIL] presentation deck: pptx is not a valid zip archive"
-    ok = len(slides) == 12
-    detail = f"{len(slides)} slides; expected 12 for 10-12 minute talk"
+    ok = len(slides) == EXPECTED_DECK_SLIDES
+    detail = (
+        f"{len(slides)} slides; expected {EXPECTED_DECK_SLIDES} "
+        "for the premium 10-12 minute talk"
+    )
     return _status("presentation deck", ok, detail)
 
 
@@ -139,8 +145,7 @@ def main() -> int:
         FINAL_DIR / "references.bib",
         FINAL_DIR / "slides_10_12min_outline.md",
         FINAL_DIR / "slide_speaker_notes.md",
-        FINAL_DIR / "deck_source" / "README.md",
-        FINAL_DIR / "confidence_triggered_swarm_final_presentation.pptx",
+        CANONICAL_DECK,
     ]
     required_results = [
         ROOT / "runs" / "baseline" / "best_model.pt",

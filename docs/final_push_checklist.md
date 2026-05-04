@@ -8,10 +8,10 @@ presentation.
 - Root `README.md` explains the project for a first-time reader.
 - `docs/artifact_guide.md` maps canonical JSONs to every report/deck figure.
 - `runs/professor_ready/` contains the eight generated figures in PNG and PDF.
-- `final_submission/confidence_triggered_swarm_final_presentation.pptx` is the
-  editable 12-slide deck for a 10-12 minute talk.
+- `final_submission/confidence_triggered_swarm_premium.pptx` is the editable
+  10-slide deck for a 10-12 minute talk.
 - `final_submission/slides_10_12min_outline.md` gives the timed talk plan.
-- `final_submission/slide_speaker_notes.md` gives the slide-by-slide script.
+- `final_submission/slide_speaker_notes.md` gives the complete rehearsal script.
 - `final_submission/final_report.tex` is the NeurIPS-style report draft.
 - `confidence_triggered_swarm/scripts/check_final_readiness.py` checks the
   canonical final-submission files.
@@ -39,11 +39,11 @@ presentation.
 
 The deck is designed to land around 11 minutes:
 
-- Slides 1-3: problem, project arc, and frozen degradation.
-- Slides 4-7: adaptation method, main result, forgetting check, continual
+- Slides 1-3: thesis, motivation, and environment.
+- Slides 4-7: adaptation method, main result, forgetting check, and continual
   matrix.
-- Slides 8-10: ablations, training trace, and continual-learning metrics.
-- Slides 11-12: full work completed, final claim, limitations, and future work.
+- Slides 8-10: ablations, contributions, conclusion, limitations, and future
+  work.
 
-Keep ablations and training-over-time concise if the talk runs long; do not cut
-the forgetting and continual-matrix slides.
+Keep ablations and contributions concise if the talk runs long; do not cut the
+forgetting and continual-matrix slides.

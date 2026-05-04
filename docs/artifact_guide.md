@@ -34,9 +34,9 @@ That is not supported by the saved results.
 | `runs/continual_run/continual_results.json` | Sequential clean-to-severe reward matrix | Fig5 to fig8 |
 | `runs/professor_ready/` | Generated PNG/PDF figures plus local README | Slides and report |
 | `final_submission/final_report.tex` | NeurIPS-style report draft | Final report |
-| `final_submission/confidence_triggered_swarm_final_presentation.pptx` | Editable 12-slide generated deck | Presentation |
+| `final_submission/confidence_triggered_swarm_premium.pptx` | Editable 10-slide premium deck | Presentation |
 | `final_submission/slides_10_12min_outline.md` | Timed 10-12 minute presentation plan | Slide deck build guide |
-| `final_submission/slide_speaker_notes.md` | Speaker notes for generated deck | Presentation rehearsal |
+| `final_submission/slide_speaker_notes.md` | Complete rehearsal script for premium deck | Presentation rehearsal |
 
 ## Figure Map
 
@@ -94,25 +94,23 @@ Continual metrics:
 
 The generated deck is:
 
-`final_submission/confidence_triggered_swarm_final_presentation.pptx`
+`final_submission/confidence_triggered_swarm_premium.pptx`
 
 It is designed for the May 4, 2026, presentation window and targets about
 11 minutes.
 
 1. Title and thesis: clean-trained PPO under post-training surprise.
-2. Project arc: full clean-train, surprise-test, adapt-and-audit loop.
-3. Frozen brittleness: show `fig2_degradation.png`.
+2. Motivation: deployment gap and why unconstrained adaptation is risky.
+3. Task and environment: clean `FormationAviary`, two drones, and surprise suite.
 4. Adaptation loop: confidence trigger, quality gate, reward-weighted update,
    KL anchor, clean replay, and EWC.
 5. Main result: show `fig1_frozen_vs_lifelong.png`.
 6. Forgetting check: show `fig4_forgetting.png`.
 7. Sequential continual matrix: show `fig6_continual_matrix.png`.
 8. Ablations: show `fig3_ablations.png`.
-9. Training over time: show `fig5_training_over_time.png`.
-10. Continual-learning metrics: show `fig8_cl_metrics.png`.
-11. Work completed: implementation, experiments, figures, report, deck, and
-    readiness checker.
-12. Closing claim: clean retention plus partial robustness; future work.
+9. Author contributions: factual split of implementation, experiments, and
+   proposal/report support.
+10. Closing claim: clean retention plus partial robustness; future work.
 
 The timed version is in `final_submission/slides_10_12min_outline.md`.
 Speaker notes are in `final_submission/slide_speaker_notes.md`.

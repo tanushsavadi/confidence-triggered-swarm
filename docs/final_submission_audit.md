@@ -7,7 +7,7 @@ Last scan: 2026-05-02.
 - Main package: `confidence_triggered_swarm/` with environments, PPO, adaptation, evaluation, plotting, and scripts.
 - Canonical result artifacts: `runs/full_eval/evaluation_results.json`, `runs/continual_run/continual_results.json`, `runs/ablations/ablation_results.json`.
 - Presentation figures: `runs/professor_ready/fig1` through `fig8` in both PNG and PDF.
-- Presentation deck: `final_submission/confidence_triggered_swarm_final_presentation.pptx` is a 12-slide, 10-12 minute deck for May 4, 2026.
+- Presentation deck: `final_submission/confidence_triggered_swarm_premium.pptx` is a 10-slide, 10-12 minute deck for May 4, 2026.
 - Existing writeups: `REPORT.md`, `docs/artifact_guide.md`, `docs/professor_brief.md`, `docs/professor_demo_notes.md`, `docs/continual_presentation_outline.md`.
 - Reference code: `_research/` and `gym-pybullet-drones-install/`; these are support/reference folders, not the core project implementation.
 - Current git state was already dirty before this prep pass, mainly from improved adaptation/tuning changes and generated `runs/improved_*` artifacts.
