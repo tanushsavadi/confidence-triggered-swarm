@@ -198,12 +198,12 @@ helped during the proposal and report stages with framing, writing, review, and
 feedback on how to explain the method and results clearly."
 
 Transition
-"I will close by separating what the project shows from what it does not show."
+"I will close with what the results support and what I would build next."
 
 ## Slide 10 - Conclusion - about 70 seconds
 
-"To wrap up, the important distinction is between what this shows and what it
-does not show.
+"To wrap up, the main result is clean retention with partial robustness, and the
+next step is making that adaptation more reliable.
 
 The strong claim is that the pipeline works as an experimental framework. It
 trains a clean policy, exposes it to post-training surprises, adapts based on
