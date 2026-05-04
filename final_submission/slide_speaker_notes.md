@@ -141,8 +141,9 @@ There is one caveat. Waypoints are slightly lower after adaptation, so this is
 not a perfect improvement story. But the main signal is that the clean behavior
 did not collapse.
 
-That clean re-test is important because surprise recovery alone would not be
-enough if the original formation skill was damaged."
+I included this clean re-test because surprise recovery by itself would not be
+enough. If the original formation skill was damaged, then the adaptation would
+not really be lifelong learning."
 
 Transition
 "The next slide gives a stronger continual-learning view of that same issue."
@@ -161,15 +162,15 @@ That is the main reason this slide matters.
 
 The metrics give a compact summary. Backward transfer and forward transfer are
 positive, and remembering is 1.0. But final average reward is still lower than
-the frozen reference. So the conclusion is careful. Clean retention looks good,
-but the method is not better than frozen on every aggregate metric."
+the frozen reference. So what I take from this is clean retention looks good,
+while overall adaptation performance still needs work."
 
 Transition
 "Next, I will show what the safeguards are doing."
 
 ## Slide 8 - Ablation Study - about 55 seconds
 
-"The ablation result is useful because it keeps the conclusion honest.
+"I included this ablation because it shows the tradeoff in the method.
 
 If we only wanted the highest severe reward in a short run, some ablations might
 look tempting. As shown in the figure, removing safeguards can raise the mean
@@ -187,22 +188,14 @@ much recovery can happen."
 Transition
 "Before the final takeaway, here is the contribution split."
 
-## Slide 9 - Author Contributions - about 35 seconds
+## Slide 9 - Author Contributions - about 30 seconds
 
-"For contributions, the course asks us to be clear about who worked on what.
-The split is straightforward.
-
-The technical implementation and experimental pipeline were primarily my work.
-That includes the environment, surprise wrapper, PPO and IPPO training,
-confidence monitor, adaptation loop, safeguards, evaluations, ablations,
-continual-learning results, figures, and deck.
-
-Deveshi helped during the proposal and report stages with framing, writing,
-review, and presentation organization. Ron also helped with proposal and report
-writing, plus feedback on explaining the method and results.
-
-I am including this because the course specifically asks us to communicate who
-worked on what."
+"For contributions, the technical implementation and experimental pipeline were
+primarily my work, including the environment, surprise wrapper, PPO and IPPO
+training, confidence monitor, adaptation loop, safeguards, evaluations,
+ablations, continual-learning results, figures, and deck. Deveshi and Ron
+helped during the proposal and report stages with framing, writing, review, and
+feedback on how to explain the method and results clearly."
 
 Transition
 "I will close by separating what the project shows from what it does not show."
