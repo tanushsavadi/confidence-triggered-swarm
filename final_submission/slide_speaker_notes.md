@@ -119,9 +119,10 @@ Moderate is the honest failure case. The lifelong policy is slightly worse
 there, which tells us this is not a universal robustness fix. It helps in some
 shifted conditions, but the trigger and update objective still need work.
 
-So the careful one-sentence takeaway is partial robustness while preserving
-clean behavior. These are single-seed results with seed 42, so the graph is
-directional evidence, not a statistically final conclusion."
+What we learned is that our method gives partial robustness while still
+preserving the clean behavior we trained for. These are single-seed results with
+seed 42, so the graph is directional evidence, not a statistically final
+conclusion."
 
 Transition
 "Since adaptation can help reward but still cause forgetting, the next slide
