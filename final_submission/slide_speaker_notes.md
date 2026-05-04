@@ -160,7 +160,6 @@ would drop as we move downward.
 
 As shown in the table, that collapse does not happen. Clean reward stays in the
 same general range after mild, after moderate, and after severe adaptation.
-That is the main reason this slide matters.
 
 The metrics give a compact summary. Backward transfer and forward transfer are
 positive, and remembering is 1.0. But final average reward is still lower than
