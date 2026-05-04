@@ -8,255 +8,226 @@ rehearsal script, not something to read word for word. Aim for about 11 minutes.
 
 - Do not read the slide text back to the audience.
 - Use each slide as evidence, then explain what the evidence means.
-- Sound like you are walking smart classmates through the project.
+- Keep a calm pace. It is better to say less clearly than to rush.
 - Keep the core claim honest. This is clean retention plus partial robustness
   under post-training surprise.
 - Say clearly that the policy was trained clean only, then surprised after
   training.
 
-## Slide 1 - Title - about 55 seconds
+## Slide 1 - Title - about 45 seconds
 
 "Hi everyone, this project is about confidence-triggered lifelong adaptation for
 drone swarms under post-training surprises.
 
-The easiest way to frame the project is this. Training a policy in simulation is
-one thing. Trusting that same policy after the environment changes is a harder
-problem. In this project, the policy learns clean two-drone formation flight
-first, and then we ask what happens when the world becomes less clean after
-training.
+The simple version is this. A drone policy can look good in a clean simulator,
+but deployment is rarely that clean. In this project, the policy first learns
+clean two-drone formation flight. Then after training, we expose it to surprises
+like wind, sensor noise, actuator weakness, and shifted waypoints.
 
-The thesis box gives the formal claim, but I want to phrase it more simply. I am
-not claiming that this solves drone robustness. I am claiming that confidence
-can be used as a trigger. When the policy starts acting uncertain, it can adapt
-between episodes while still being constrained to remember the clean skill.
+The thesis box gives the formal claim, but the main idea is that confidence can
+act as a trigger. When the policy seems uncertain, it adapts between episodes,
+while the safeguards try to preserve the clean skill.
 
-So the story of the talk is not just a method. It is the whole experimental
-pipeline. Train on clean formation flight, inject surprise after training,
-adapt only when confidence drops, and then check whether the original behavior
-survived."
+So the project is really about the full loop. Train clean, add surprise after
+training, adapt only when confidence drops, and then check whether the original
+behavior survived."
 
 Transition
-"I will start with why this kind of post-training surprise matters."
+"I will start with why this post-training surprise setting matters."
 
-## Slide 2 - Motivation - about 60 seconds
+## Slide 2 - Motivation - about 50 seconds
 
-"This slide is really about why clean simulator performance is not enough.
+"This slide is about why clean simulator performance is not enough.
 
-On the left, the slide lists the kinds of shifts that are realistic for drones.
-I will not read every item, but the intuition is that each one changes a
-different part of the control problem. Wind changes the physics. Sensor noise
-changes perception. Actuator weakness changes whether an action has the effect
-the policy expects. Goal shifts change the task context.
+In the Problem section, the examples are all realistic ways a drone deployment
+can shift. Wind changes the physics. Sensor noise changes what the policy thinks
+it sees. Actuator weakness changes whether actions work as expected. Goal
+shifts change the task context.
 
-The reason this matters for lifelong learning is that both simple solutions are
-unsatisfying. If we retrain from scratch every time, the system is expensive and
-not very adaptive. If we allow unrestricted updates, the policy may adapt to the
-new condition by forgetting the original clean formation skill.
+The issue is that the two simple answers are not enough. Retraining every time
+is expensive. Updating freely can cause the policy to forget the clean formation
+skill.
 
-That is why the right side of the slide is organized as detect, adapt, and
-protect. The important part is the combination. Confidence decides when the
-system should even consider adapting. The quality gate tries to avoid learning
-from bad crash data. The anti-forgetting terms keep the update from drifting too
-far away from the original policy."
+In Our Approach, the three pieces are detect low confidence, adapt only from
+usable experience, and protect the original clean policy. The important part is
+the combination. Confidence starts the update, the quality gate filters bad
+episodes, and the anti-forgetting terms keep the update from drifting too far."
 
 Transition
-"With that motivation, here is the concrete drone task used for the project."
+"With that motivation, here is the concrete drone task."
 
-## Slide 3 - Task And Environment - about 70 seconds
+## Slide 3 - Task And Environment - about 60 seconds
 
-"This slide gives the experimental setup. I am not going to walk through every
-number, but there are three details that matter for interpreting the results.
+"This slide gives the setup. I will only focus on the details needed to
+interpret the results.
 
-First, this is a small but real multi-agent control setting. There are two CF2X
-drones using a shared-policy IPPO setup. The policy is not controlling a toy
-point mass. It is acting through the PyBullet drone environment.
+The task uses two CF2X drones with a shared-policy IPPO setup in PyBullet. Each
+episode has 450 control steps, and each drone observes its state plus waypoint
+information. So this is a small setup, but it is still a real control problem,
+not just a toy point-mass task.
 
-Second, the observation includes both drone state and waypoint information. That
-means the policy has enough context to track the formation goal, but it still
-has to handle noisy or shifted inputs once surprises are added.
+The key design choice is in the note at the bottom. The baseline is trained on
+clean episodes only. The surprise suite is added after training.
 
-Third, and this is the key design choice, the note at the bottom says the
-baseline is trained on clean episodes only. The surprise suite is not part of
-baseline training. As you can see in the table, mild, moderate, and severe
-progressively add more shift after training. That lets us ask whether the
-lifelong layer helps after the clean policy has already been learned.
+As you can see in the table, the severities add more shift as we move from mild
+to moderate to severe. That is what lets us test whether the lifelong layer can
+recover after the clean policy has already been learned.
 
-The reward section is there to show what success means. The drones are rewarded
-for moving through waypoints while keeping formation and avoiding unstable
-states. So when reward collapses later, it is not just a random metric. It means
-the controller is failing at the formation task."
+The reward section tells us what success means. The drones need to move through
+waypoints while keeping formation and avoiding unstable states."
 
 Transition
-"Now I will explain how the adaptation layer decides when and how to update."
+"Now I will explain how the adaptation layer decides when to update."
 
-## Slide 4 - Method - about 85 seconds
+## Slide 4 - Method - about 70 seconds
 
-"This slide is a method diagram, but the key idea is simple. The policy does not
-adapt constantly. It adapts only when its own confidence suggests that the
-current environment is outside what it learned cleanly.
+"This method diagram has four pieces, but the core idea is simple. The policy
+does not adapt all the time. It adapts only when confidence suggests that the
+environment is outside the clean training distribution.
 
-The first part of the loop measures uncertainty. Entropy tells us when the
-policy distribution is broad. MC dropout gives a second signal by checking
-whether the network predictions change across repeated stochastic forward
-passes. Using both is useful because we do not want the trigger to depend on
-only one noisy signal.
+The confidence signal combines entropy and MC dropout. Entropy tells us when the
+action distribution is broad. MC dropout checks whether repeated stochastic
+forward passes disagree. Using both makes the trigger less dependent on one
+noisy signal.
 
-The second part is the safety check. This is important because a bad episode can
-be worse than no data at all. If the drones crash immediately, that episode does
-not teach a useful recovery behavior. It mostly teaches the policy to imitate a
-failure. That is why the update is gated by episode length and mean reward.
+The quality gate is just as important. If the drones crash right away, that is
+not useful data. Learning from that can make the policy imitate failure. So the
+episode needs to be long enough and have enough reward before it enters the
+adaptation buffer.
 
-The third part is the update itself. It is reward-weighted behavior cloning, so
-the policy leans more toward transitions that worked better. This is not a full
-retraining step. It is a small between-episode adjustment.
-
-The last part is what makes it a lifelong-learning experiment rather than only a
-robustness experiment. KL anchoring, clean replay, and EWC all push against
-catastrophic forgetting in different ways. The point is to adapt without
-letting the policy forget the clean formation behavior."
+The update itself is small and happens between episodes. It uses
+reward-weighted behavior cloning, so better transitions matter more. Then KL
+anchoring, clean replay, and EWC push against forgetting. That is what makes the
+method a lifelong-learning experiment instead of only a robustness test."
 
 Transition
 "Now we can look at whether that actually helped."
 
-## Slide 5 - Main Results - about 75 seconds
+## Slide 5 - Main Results - about 65 seconds
 
-"This is the main result slide. The first thing to notice in the graph is the
-pattern, not just the individual numbers.
+"This is the main result slide. The thing to notice in the graph is the overall
+pattern.
 
-The clean condition stays strong, which is important because the method should
-not damage the original task. Mild and severe show clear gains for the lifelong
-policy over the frozen baseline. As shown by the cards, mild improves by about
-50.8 percent and severe improves by about 54.7 percent.
+Clean stays strong, which matters because adaptation should not damage the
+original task. Mild and severe show the clearest gains for the lifelong policy.
+As shown by the cards, mild improves by about 50.8 percent and severe improves
+by about 54.7 percent.
 
-The moderate condition is where the story becomes more honest and more
-interesting. The lifelong policy is slightly worse there. That tells us the
-method is not a universal robustness fix. It helps in some shifted conditions,
-but the trigger and update objective are still imperfect.
+Moderate is the honest failure case. The lifelong policy is slightly worse
+there, which tells us this is not a universal robustness fix. It helps in some
+shifted conditions, but the trigger and update objective still need work.
 
-So if I had to summarize this slide in one sentence, I would say the method
-shows partial robustness while preserving clean behavior. The honest note is
-also important. These are single-seed results with seed 42, so the right way to
-read the graph is as directional evidence, not as a statistically final result."
+So the careful one-sentence takeaway is partial robustness while preserving
+clean behavior. Also, these are single-seed results with seed 42, so I would
+treat the graph as directional evidence, not a statistically final conclusion."
 
 Transition
 "Since adaptation can help reward but still cause forgetting, the next slide
 checks the clean skill directly."
 
-## Slide 6 - Forgetting Analysis - about 60 seconds
+## Slide 6 - Forgetting Analysis - about 50 seconds
 
-"This slide answers a different question from the previous one. Slide 5 asks
-whether reward improves under surprise. This slide asks whether adaptation
-damages the original clean task.
+"This slide asks a different question. After adapting under severe surprise,
+does the policy still work on the original clean task?
 
-As the figure shows, the clean reward after severe adaptation is still high. In
-fact, it is higher in this probe than before adaptation. I would not present
-that as proof that severe adaptation improves clean flight in general. The more
-careful interpretation is that there is no catastrophic forgetting in this run.
+As the figure shows, clean reward after severe adaptation is still high. In this
+probe, it is even higher than before adaptation. I would not overclaim that as a
+general clean improvement. The safer interpretation is that there is no
+catastrophic forgetting in this run.
 
-The small caveat on the slide matters too. Waypoints are slightly lower after
-adaptation, so this is not a perfect clean-skill improvement story. But the main
-signal is that the policy did not collapse when evaluated again on clean
-FormationAviary.
+The caveat on the slide matters. Waypoints are slightly lower after adaptation,
+so this is not a perfect improvement story. But the main signal is that the
+clean behavior did not collapse.
 
-That is exactly why the anti-forgetting pieces are included. Without this kind
-of clean re-test, it would be easy to report surprise recovery while missing the
-fact that the original skill was damaged."
+That clean re-test is important because surprise recovery alone would not be
+enough if the original formation skill was damaged."
 
 Transition
-"A single clean re-test is useful, but the next slide gives a stronger continual
-learning view."
+"The next slide gives a stronger continual-learning view of that same issue."
 
-## Slide 7 - Continual Learning - about 75 seconds
+## Slide 7 - Continual Learning - about 65 seconds
 
 "This matrix is the strongest evidence for the forgetting story.
 
-The way to read it is not to scan every cell. Focus on the clean column. Each
-row is after the policy has gone through another adaptation phase. If the
-lifelong process were forgetting the clean task, the clean column would drop as
-we move downward through the phases.
+The main thing to focus on is the clean column. Each row is after another
+adaptation phase. If the policy were forgetting clean flight, that clean column
+would drop as we move downward.
 
-As shown in the table, that collapse does not happen. The clean reward stays in
-the same general range after mild, after moderate, and after severe adaptation.
+As shown in the table, that collapse does not happen. Clean reward stays in the
+same general range after mild, after moderate, and after severe adaptation.
 That is the main reason this slide matters.
 
-The metrics on the right give a compact summary. Backward transfer and forward
-transfer are positive, and remembering is 1.0. At the same time, the final
-average reward is lower than the frozen reference. So the slide supports a
-careful conclusion. The method is good at retaining clean behavior in this run,
-but it is not yet better than frozen performance on every aggregate metric."
+The metrics give a compact summary. Backward transfer and forward transfer are
+positive, and remembering is 1.0. But final average reward is still lower than
+the frozen reference. So the conclusion is careful. Clean retention looks good,
+but the method is not better than frozen on every aggregate metric."
 
 Transition
-"The next question is what the safeguards are doing and whether they are worth
-keeping."
+"Next, I will show what the safeguards are doing."
 
-## Slide 8 - Ablation Study - about 65 seconds
+## Slide 8 - Ablation Study - about 55 seconds
 
-"This slide is useful because it prevents an overly simple conclusion.
+"This slide prevents an overly simple conclusion.
 
-If we only wanted the highest severe reward in a short run, the ablations might
-tempt us to remove safeguards. As shown in the figure, some removed-safeguard
-variants can reach a higher mean reward than the full method.
+If we only wanted the highest severe reward in a short run, some ablations might
+look tempting. As shown in the figure, removing safeguards can raise the mean
+reward.
 
 But the full method has the lowest variance, which means it is the most stable
-in this severe-surprise ablation. That matters because the project is not only
-about maximizing one severe reward number. It is about adapting while protecting
-the clean policy.
+in this severe-surprise ablation. That matters because the goal is not only
+short-run reward. The goal is adaptation while protecting the clean policy.
 
-So the real takeaway is the one at the bottom of the slide. The safeguards are
-not the only bottleneck. The harder problem is deciding when adaptation data is
-good enough to learn from. The trigger is conservative, and the quality gate
-protects the policy, but it also limits how much recovery can happen."
+So the real bottleneck is not just which safeguard to delete. The harder problem
+is deciding when adaptation data is good enough to learn from. The trigger is
+conservative, and the quality gate protects the policy, but it also limits how
+much recovery can happen."
 
 Transition
 "Before the final takeaway, I want to briefly cover the contribution slide."
 
-## Slide 9 - Author Contributions - about 40 seconds
+## Slide 9 - Author Contributions - about 35 seconds
 
 "I will keep this brief because the slide already lists the split.
 
-The main thing to say is that the technical implementation and experimental
-pipeline were primarily my work. That includes the environment setup, surprise
-wrapper, PPO and IPPO training, confidence monitor, adaptation loop, safeguards,
-evaluation scripts, ablations, continual-learning evaluation, figures, and deck.
+The technical implementation and experimental pipeline were primarily my work.
+That includes the environment, surprise wrapper, PPO and IPPO training,
+confidence monitor, adaptation loop, safeguards, evaluations, ablations,
+continual-learning results, figures, and deck.
 
-Deveshi helped during the proposal and report stages, especially with framing,
-writing, review, and presentation organization. Ron also helped with proposal
-and report writing and with feedback on how to explain the method and results
-clearly.
+Deveshi helped during the proposal and report stages with framing, writing,
+review, and presentation organization. Ron also helped with proposal and report
+writing, plus feedback on explaining the method and results.
 
 I am including this because the course specifically asks us to communicate who
-worked on what. The goal here is to be clear and factual."
+worked on what."
 
 Transition
 "I will close by separating what the project shows from what it does not show."
 
-## Slide 10 - Conclusion - about 85 seconds
+## Slide 10 - Conclusion - about 70 seconds
 
-"This final slide is the summary, but I want to use it to separate the strong
-claim from the limitations.
+"This final slide separates the strong claim from the limitations.
 
-The strong claim is that the full pipeline works as an experimental framework.
-It trains a clean policy, exposes it to post-training surprises, adapts based on
-confidence, and then audits whether clean behavior survived. As shown in the
+The strong claim is that the pipeline works as an experimental framework. It
+trains a clean policy, exposes it to post-training surprises, adapts based on
+confidence, and audits whether clean behavior survived. As shown in the
 achieved section, the clearest robustness gains are mild and severe, and the
 clean-skill checks are encouraging.
 
-The limitation section is just as important. This is not enough evidence to
-claim a solved drone deployment system. It is one seed, two drones, simplified
-simulation physics, and no hardware. Moderate surprise also regresses, which
-means the adaptation trigger and objective need more work.
+The limitations are just as important. This is one seed, two drones, simplified
+simulation physics, and no hardware. Moderate surprise regresses, which means
+the adaptation trigger and objective need more work.
 
-The future-work list points to the next logical steps. Multi-seed validation
-would test whether the pattern is reliable. Larger swarms would test whether
-the idea scales beyond two drones. Better adaptation objectives could make the
-updates more useful instead of only more cautious. Peer-help mechanisms would
-also be interesting because one drone's confidence signal could help another
-drone adapt more safely.
+The next steps are pretty clear. Multi-seed validation would test reliability.
+Larger swarms would test scaling. Better adaptation objectives could make the
+updates more useful instead of only cautious. Peer-help mechanisms are also
+interesting because one drone's confidence could help another adapt more
+safely.
 
 So the final takeaway is this. The project does not solve sim-to-real drone
 control, but it gives a concrete lifelong-learning pipeline for post-training
-surprise. The most defensible result is clean retention plus partial robustness,
-with clear next steps for making the adaptation stronger."
+surprise. The most defensible result is clean retention plus partial
+robustness."
 
 ## If Running Long
 
