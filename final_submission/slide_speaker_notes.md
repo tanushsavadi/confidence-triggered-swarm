@@ -205,15 +205,18 @@ Transition
 "To wrap up, the main result is clean retention with partial robustness, and the
 next step is making that adaptation more reliable.
 
-The strong claim is that the pipeline works as an experimental framework. It
-trains a clean policy, exposes it to post-training surprises, adapts based on
-confidence, and audits whether clean behavior survived. As shown in the
-achieved section, the clearest robustness gains are mild and severe, and the
-clean-skill checks are encouraging.
+What we built is the full pipeline. We trained a clean drone policy, added
+surprises after training, used confidence to decide when to adapt, and then
+checked whether the clean behavior was still there.
 
-The limitations are just as important. We only tested one seed, two drones,
-simplified simulation physics, and no hardware. Moderate surprise regresses,
-which means the adaptation trigger and objective need more work.
+What we learned is that confidence-triggered adaptation can preserve clean
+behavior while recovering some performance under surprise. Mild and severe
+improved, and the clean-skill checks were encouraging.
+
+We also learned where the method needs work. Moderate got worse, and the
+evidence is still scoped to one seed, two drones, simplified PyBullet physics,
+and no hardware. So the next version should focus on a stronger trigger and a
+better adaptation objective.
 
 The next steps are pretty clear. Multi-seed validation would test reliability.
 Larger swarms would test scaling. Better adaptation objectives could make the
