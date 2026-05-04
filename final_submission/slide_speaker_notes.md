@@ -81,7 +81,7 @@ through waypoints while keeping formation and avoiding unstable states."
 Transition
 "Next, I will show how I made the policy decide when to adapt."
 
-## Slide 4 - Method - about 70 seconds
+## Slide 4 - Method - about 85 seconds
 
 "This method diagram has four pieces, but the core idea is simple. The policy
 does not adapt all the time. It adapts only when confidence suggests that the
@@ -100,10 +100,20 @@ adaptation buffer.
 The update itself is small and happens between episodes. It uses
 reward-weighted behavior cloning, so better transitions matter more. Then KL
 anchoring, clean replay, and EWC push against forgetting. That is what makes the
-method a lifelong-learning experiment instead of only a robustness test."
+method a lifelong-learning experiment instead of only a robustness test.
+
+The prior work I am using here is continual learning and catastrophic forgetting.
+Van de Ven, Soures, and Kudithipudi describe continual learning as learning from
+changing data without overwriting what was learned before.
+
+That is the reason I used EWC, clean replay, and KL anchoring. Those ideas come
+from the broader continual learning problem. My novelty is not claiming that I
+invented those safeguards. My contribution is applying them in this post-training
+drone surprise setting, with confidence deciding when adaptation should happen."
 
 Transition
 "Now we can look at whether that actually helped."
+
 
 ## Slide 5 - Main Results - about 65 seconds
 
@@ -164,7 +174,11 @@ same general range after mild, after moderate, and after severe adaptation.
 The metrics give a compact summary. Backward transfer and forward transfer are
 positive, and remembering is 1.0. But final average reward is still lower than
 the frozen reference. So what I take from this is clean retention looks good,
-while overall adaptation performance still needs work."
+while overall adaptation performance still needs work.
+
+In my results, the safeguards agree with prior work on retention, but I still
+cannot claim the adaptation problem is solved. The final average being lower
+than frozen shows that this balance still needs work."
 
 Transition
 "Next, I will show what the safeguards are doing."
@@ -210,14 +224,14 @@ What we built is the full pipeline. We trained a clean drone policy, added
 surprises after training, used confidence to decide when to adapt, and then
 checked whether the clean behavior was still there.
 
-What we learned is that confidence-triggered adaptation can preserve clean
-behavior while recovering some performance under surprise. Mild and severe
-improved, and the clean-skill checks were encouraging.
+What we learned matches the continual learning framing. The anti-forgetting
+pieces helped preserve clean behavior, which agrees with prior work on replay
+and regularization. But the moderate regression shows the other side of the
+tradeoff. Protecting the old skill is not enough if the adaptation trigger and
+update objective are not reliable.
 
-We also learned where the method needs work. Moderate got worse, and the
-evidence is still scoped to one seed, two drones, simplified PyBullet physics,
-and no hardware. So the next version should focus on a stronger trigger and a
-better adaptation objective.
+So my conclusion is that our method shows clean retention and partial
+robustness, but it does not solve lifelong drone adaptation yet.
 
 The next steps are pretty clear. Multi-seed validation would test reliability.
 Larger swarms would test scaling. Better adaptation objectives could make the
@@ -225,10 +239,9 @@ updates more useful instead of only cautious. Peer-help mechanisms are also
 interesting because one drone's confidence could help another adapt more
 safely.
 
-So the final takeaway is this. The project does not solve sim-to-real drone
+That is the claim I would defend. The project does not solve sim-to-real drone
 control, but it gives a concrete lifelong-learning pipeline for post-training
-surprise. The most defensible result is clean retention plus partial
-robustness."
+surprise. The result I can defend is clean retention plus partial robustness."
 
 ## If Running Long
 
