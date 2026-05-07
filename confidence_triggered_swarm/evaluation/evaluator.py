@@ -21,6 +21,7 @@ from confidence_triggered_swarm.adaptation.ewc import EWCRegularizer
 from confidence_triggered_swarm.adaptation.lifelong_trainer import LifelongTrainer
 from confidence_triggered_swarm.envs.formation_aviary import FormationAviary
 from confidence_triggered_swarm.envs.surprise_wrapper import SurpriseConfig, SurpriseWrapper
+from confidence_triggered_swarm.utils.seeding import reset_env, set_global_seeds
 
 
 class Evaluator:
@@ -38,11 +39,16 @@ class Evaluator:
         baseline_model_path: str,
         save_dir: str = "results",
         device: str = "auto",
+        seed: int | None = None,
+        config_path: str | None = None,
     ) -> None:
         self.config = config
         self.baseline_model_path = baseline_model_path
+        self.seed = seed
+        self.config_path = config_path
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
+        set_global_seeds(seed)
 
         # resolve device
         if device == "auto":
@@ -57,7 +63,7 @@ class Evaluator:
 
         # cache obs_dim/act_dim from a temp env
         tmp_env = self._create_env("clean")
-        obs_sample, _ = tmp_env.reset()
+        obs_sample, _ = reset_env(tmp_env, self.seed, 0, 1)
         self.obs_dim = obs_sample.shape[-1] if obs_sample.ndim > 1 else obs_sample.shape[0]
         self.act_dim = tmp_env.action_space.shape[-1]
         tmp_env.close()
@@ -76,7 +82,7 @@ class Evaluator:
 
         all_results: Dict[str, Dict[str, Any]] = {}
 
-        for severity in severity_levels:
+        for severity_idx, severity in enumerate(severity_levels):
             print(f"\n{'='*60}")
             print(f"  Frozen Baseline — severity: {severity}")
             print(f"{'='*60}")
@@ -86,7 +92,11 @@ class Evaluator:
             agent.load(self.baseline_model_path)
 
             results = self._run_frozen_episodes(
-                agent, env, self.n_eval_episodes, label=f"frozen/{severity}"
+                agent,
+                env,
+                self.n_eval_episodes,
+                label=f"frozen/{severity}",
+                seed_stream=100 + severity_idx,
             )
             results["severity"] = severity
             results["mode"] = "frozen"
@@ -107,7 +117,7 @@ class Evaluator:
         policy_cfg = self.config.get("policy", {})
         all_results: Dict[str, Dict[str, Any]] = {}
 
-        for severity in severity_levels:
+        for severity_idx, severity in enumerate(severity_levels):
             print(f"\n{'='*60}")
             print(f"  Lifelong Adaptation — severity: {severity}")
             print(f"{'='*60}")
@@ -141,6 +151,8 @@ class Evaluator:
                 replay_buffer_size=adapt_cfg.get("replay_buffer_size", 10000),
                 config=self.config,
                 device=self.device,
+                base_seed=self.seed,
+                seed_stream=200 + severity_idx,
             )
 
             trainer.setup(clean_env, n_calibration_episodes=5)
@@ -179,7 +191,11 @@ class Evaluator:
         baseline_agent = self._create_agent()
         baseline_agent.load(self.baseline_model_path)
         baseline_clean = self._run_frozen_episodes(
-            baseline_agent, clean_env_1, self.n_eval_episodes, label="forgetting/baseline"
+            baseline_agent,
+            clean_env_1,
+            self.n_eval_episodes,
+            label="forgetting/baseline",
+            seed_stream=300,
         )
         clean_env_1.close()
 
@@ -221,6 +237,8 @@ class Evaluator:
                 replay_buffer_size=adapt_cfg.get("replay_buffer_size", 10000),
                 config=self.config,
                 device=self.device,
+                base_seed=self.seed,
+                seed_stream=400,
             )
             trainer.setup(clean_env_cal, n_calibration_episodes=5)
 
@@ -235,7 +253,11 @@ class Evaluator:
         print("\n--- Adapted policy on clean env ---")
         clean_env_2 = self._create_env("clean")
         adapted_clean = self._run_frozen_episodes(
-            adapted_agent, clean_env_2, self.n_eval_episodes, label="forgetting/adapted"
+            adapted_agent,
+            clean_env_2,
+            self.n_eval_episodes,
+            label="forgetting/adapted",
+            seed_stream=500,
         )
         clean_env_2.close()
 
@@ -284,6 +306,9 @@ class Evaluator:
                 "severity_levels": self.default_severity_levels,
                 "baseline_model": self.baseline_model_path,
                 "device": self.device,
+                "seed": self.seed,
+                "config_path": self.config_path,
+                "config": self.config,
             },
         }
 
@@ -325,7 +350,7 @@ class Evaluator:
 
         if severity != "clean":
             surprise_config = SurpriseConfig.from_severity(severity)
-            env = SurpriseWrapper(env, surprise_config)
+            env = SurpriseWrapper(env, surprise_config, seed=self.seed)
 
         return env
 
@@ -363,6 +388,7 @@ class Evaluator:
         env: Any,
         n_episodes: int,
         label: str = "",
+        seed_stream: int = 0,
     ) -> Dict[str, Any]:
         """Run episodes with frozen policy (no gradient updates)."""
         agent.policy.eval()
@@ -375,7 +401,7 @@ class Evaluator:
         all_waypoints: List[int] = []
 
         for ep in range(n_episodes):
-            obs, info = env.reset()
+            obs, info = reset_env(env, self.seed, ep, seed_stream)
             done = False
             ep_reward = 0.0
             step_count = 0
@@ -422,9 +448,18 @@ class Evaluator:
 
         Success = waypoints_reached >= total_waypoints - 1.
         """
-        wp = results.get("mean_waypoints_reached", 0)
-        total_waypoints = results.get("total_waypoints", 3)
-        return float(wp >= total_waypoints - 1)
+        all_successes = results.get("all_successes")
+        if all_successes:
+            return float(np.mean([bool(v) for v in all_successes]))
+
+        all_waypoints = results.get("all_waypoints")
+        total_waypoints = int(results.get("total_waypoints", 3))
+        if all_waypoints:
+            return float(
+                np.mean([int(wp) >= max(total_waypoints - 1, 0) for wp in all_waypoints])
+            )
+
+        return float(results.get("success_rate", 0.0))
 
     # -- comparison --
 

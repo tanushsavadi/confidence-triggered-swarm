@@ -19,7 +19,12 @@ from gym_pybullet_drones.utils.enums import (
 
 from confidence_triggered_swarm.algorithms.ppo import PPOAgent
 from confidence_triggered_swarm.envs.formation_aviary import FormationAviary
-from confidence_triggered_swarm.envs.surprise_wrapper import SurpriseConfig, SurpriseWrapper
+from confidence_triggered_swarm.envs.surprise_wrapper import (
+    DomainRandomizationWrapper,
+    SurpriseConfig,
+    SurpriseWrapper,
+)
+from confidence_triggered_swarm.utils.seeding import reset_env
 
 
 def create_env(
@@ -27,6 +32,8 @@ def create_env(
     severity: str = "clean",
     gui: bool = False,
     surprise_config_dict: Optional[dict] = None,
+    seed: int | None = None,
+    domain_randomized: bool = False,
 ) -> Any:
     """Create a FormationAviary, optionally wrapped with SurpriseWrapper.
 
@@ -53,11 +60,14 @@ def create_env(
     )
 
     # wrap with surprises if needed
-    if surprise_config_dict is not None:
+    if domain_randomized or severity == "domain_randomized":
+        ranges = config.get("domain_randomization", {})
+        env = DomainRandomizationWrapper(env, ranges=ranges, seed=seed)
+    elif surprise_config_dict is not None:
         sc = SurpriseConfig.from_config_dict(surprise_config_dict)
-        env = SurpriseWrapper(env, sc)
+        env = SurpriseWrapper(env, sc, seed=seed)
     elif severity != "clean":
-        env = SurpriseWrapper(env, SurpriseConfig.from_severity(severity))
+        env = SurpriseWrapper(env, SurpriseConfig.from_severity(severity), seed=seed)
 
     return env
 
@@ -114,6 +124,8 @@ def run_frozen_episodes(
     device: str = "cpu",
     label: str = "",
     deterministic: bool = False,
+    base_seed: int | None = None,
+    seed_stream: int = 0,
 ) -> Dict[str, Any]:
     """Run episodes with frozen policy — no gradient updates.
 
@@ -126,7 +138,7 @@ def run_frozen_episodes(
     all_waypoints: List[int] = []
 
     for ep in range(n_episodes):
-        obs, info = env.reset()
+        obs, info = reset_env(env, base_seed, ep, seed_stream)
         done = False
         ep_reward = 0.0
         step_count = 0

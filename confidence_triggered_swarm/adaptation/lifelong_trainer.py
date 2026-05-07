@@ -26,6 +26,7 @@ import torch.optim as optim
 from confidence_triggered_swarm.algorithms.ppo import PPOAgent
 from confidence_triggered_swarm.adaptation.confidence import ConfidenceMonitor
 from confidence_triggered_swarm.adaptation.ewc import EWCRegularizer
+from confidence_triggered_swarm.utils.seeding import reset_env
 
 
 class LifelongTrainer:
@@ -51,6 +52,8 @@ class LifelongTrainer:
         kl_anchor_coef: float = 0.5,
         config: Optional[Dict[str, Any]] = None,
         device: str = "cpu",
+        base_seed: int | None = None,
+        seed_stream: int = 0,
     ) -> None:
         self.agent = agent
         self.monitor = confidence_monitor
@@ -61,6 +64,8 @@ class LifelongTrainer:
         self.replay_buffer_size = replay_buffer_size
         self.device = device
         self.config = config or {}
+        self.base_seed = base_seed
+        self.seed_stream = seed_stream
 
         # read adaptation sub-config (with fallbacks to constructor args)
         adapt_config = self.config.get("adaptation", {})
@@ -83,6 +88,7 @@ class LifelongTrainer:
         )
         self.gamma = train_config.get("gamma", 0.99)
         self.gae_lambda = train_config.get("gae_lambda", 0.95)
+        self.force_adaptation = adapt_config.get("force_adaptation", False)
 
         # separate optimizer for adaptation (not the main PPO one)
         self.adapt_optimizer = optim.Adam(
@@ -129,7 +135,12 @@ class LifelongTrainer:
         5. Populate clean replay buffer
         """
         print("Calibrating confidence monitor...")
-        self.monitor.calibrate(clean_env, n_calibration_episodes)
+        self.monitor.calibrate(
+            clean_env,
+            n_calibration_episodes,
+            base_seed=self.base_seed,
+            seed_stream=self.seed_stream + 10,
+        )
 
         print("Taking EWC snapshot of clean policy...")
         self.ewc.snapshot()
@@ -152,7 +163,12 @@ class LifelongTrainer:
         all_rewards: List[float] = []
 
         for _ep in range(n_calibration_episodes):
-            obs, _info = clean_env.reset()
+            obs, _info = reset_env(
+                clean_env,
+                self.base_seed,
+                _ep,
+                self.seed_stream + 20,
+            )
             done = False
             while not done:
                 actions, _log_probs, _values, _ents = self.agent.select_actions(obs)
@@ -199,9 +215,9 @@ class LifelongTrainer:
 
     # -- episode execution --
 
-    def run_episode(self, env: Any) -> Dict[str, Any]:
+    def run_episode(self, env: Any, episode_idx: int = 0) -> Dict[str, Any]:
         """Run one episode with confidence monitoring + potential adaptation."""
-        obs, info = env.reset()
+        obs, info = reset_env(env, self.base_seed, episode_idx, self.seed_stream)
         done = False
 
         episode_data: Dict[str, List[Any]] = {
@@ -270,7 +286,7 @@ class LifelongTrainer:
             if episode_data["confidences"]
             else 1.0
         )
-        should_adapt = self.monitor.should_adapt() or (
+        should_adapt = self.force_adaptation or self.monitor.should_adapt() or (
             ep_avg_conf < self.monitor.confidence_threshold
             and len(self.replay_buffer["observations"]) >= self.adapt_batch_size
         )
@@ -290,10 +306,16 @@ class LifelongTrainer:
         if adaptation_skipped:
             self.skipped_adaptations += 1
 
+        total_waypoints = int(info.get("total_waypoints", 5))
+        waypoints_reached = int(info.get("current_waypoint_idx", 0))
+        success = waypoints_reached >= max(total_waypoints - 1, 0)
+
         stats.update({
             "total_reward": total_reward,
             "episode_length": step_count,
-            "waypoints_reached": info.get("current_waypoint_idx", 0),
+            "waypoints_reached": waypoints_reached,
+            "total_waypoints": total_waypoints,
+            "success": bool(success),
             "avg_confidence": (
                 float(np.mean(episode_data["confidences"]))
                 if episode_data["confidences"]
@@ -707,7 +729,7 @@ class LifelongTrainer:
         total_rejected = 0
         total_skipped = 0
         for ep in range(n_episodes):
-            stats = self.run_episode(env)
+            stats = self.run_episode(env, episode_idx=ep)
             all_stats.append(stats)
             total_rejected += stats.get('rejected_episodes', 0)
             total_skipped += int(stats.get("adaptation_skipped", False))
@@ -728,6 +750,7 @@ class LifelongTrainer:
         confidences = [s["avg_confidence"] for s in all_stats]
         waypoints = [s["waypoints_reached"] for s in all_stats]
         lengths = [s["episode_length"] for s in all_stats]
+        successes = [bool(s.get("success", False)) for s in all_stats]
         n_adapted_total = sum(1 for s in all_stats if s["adapted"])
 
         return {
@@ -738,12 +761,18 @@ class LifelongTrainer:
             "mean_confidence": float(np.mean(confidences)),
             "mean_waypoints_reached": float(np.mean(waypoints)),
             "mean_episode_length": float(np.mean(lengths)),
+            "success_rate": float(np.mean(successes)) if successes else 0.0,
             "total_adaptations": n_adapted_total,
             "adaptation_rate": n_adapted_total / max(n_episodes, 1),
             "skipped_adaptations": total_skipped,
             "rejected_episodes": total_rejected,
             "all_rewards": rewards,
+            "all_waypoints": [int(w) for w in waypoints],
+            "all_successes": [bool(s) for s in successes],
             "all_confidences": confidences,
+            "total_waypoints": int(all_stats[-1].get("total_waypoints", 5))
+            if all_stats
+            else 5,
         }
 
     def get_stats(self) -> Dict[str, Any]:

@@ -12,7 +12,7 @@ presets via SurpriseConfig.from_severity().
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, Tuple
 
 import gymnasium
@@ -266,3 +266,79 @@ class SurpriseWrapper(gymnasium.Wrapper):
 
         shift = self._rng.standard_normal(3) * self.config.goal_shift_magnitude
         base.waypoints[idx] = base.waypoints[idx] + shift
+
+
+class DomainRandomizationWrapper(SurpriseWrapper):
+    """Sample a fresh surprise configuration at each episode reset.
+
+    This wrapper is meant for robust-training baselines, where the policy sees a
+    range of perturbations during training instead of only clean flight.
+    """
+
+    DEFAULT_RANGES: Dict[str, Tuple[float, float]] = {
+        "wind_force_range": (0.0, 0.08),
+        "sensor_noise_std_range": (0.0, 0.04),
+        "sensor_dropout_prob_range": (0.0, 0.04),
+        "actuator_weakness_range": (0.75, 1.0),
+        "goal_shift_prob_range": (0.0, 0.0008),
+        "goal_shift_magnitude_range": (0.0, 0.1),
+    }
+
+    def __init__(
+        self,
+        env: gymnasium.Env,
+        ranges: Dict[str, Tuple[float, float]] | None = None,
+        seed: int | None = None,
+    ) -> None:
+        super().__init__(env, SurpriseConfig(), seed=seed)
+        self.ranges = dict(self.DEFAULT_RANGES)
+        if ranges:
+            for key, value in ranges.items():
+                if isinstance(value, (list, tuple)) and len(value) == 2:
+                    self.ranges[key] = (float(value[0]), float(value[1]))
+
+    def reset(
+        self, *, seed: int | None = None, options: dict | None = None
+    ) -> Tuple[NDArray, Dict[str, Any]]:
+        """Sample perturbation magnitudes, then reset the wrapped env."""
+        if seed is not None:
+            self._rng = np.random.default_rng(seed)
+
+        self.config = self._sample_config()
+        obs, info = super().reset(seed=seed, options=options)
+        info["domain_randomized"] = True
+        info["sampled_surprise_config"] = {
+            "wind_force_range": self.config.wind_force_range,
+            "sensor_noise_std": self.config.sensor_noise_std,
+            "sensor_dropout_prob": self.config.sensor_dropout_prob,
+            "actuator_weakness": self.config.actuator_weakness,
+            "goal_shift_prob": self.config.goal_shift_prob,
+            "goal_shift_magnitude": self.config.goal_shift_magnitude,
+        }
+        return obs, info
+
+    def _uniform(self, key: str) -> float:
+        lo, hi = self.ranges[key]
+        return float(self._rng.uniform(lo, hi))
+
+    def _sample_config(self) -> SurpriseConfig:
+        wind_max = self._uniform("wind_force_range")
+        sensor_noise = self._uniform("sensor_noise_std_range")
+        dropout = self._uniform("sensor_dropout_prob_range")
+        actuator = self._uniform("actuator_weakness_range")
+        goal_prob = self._uniform("goal_shift_prob_range")
+        goal_mag = self._uniform("goal_shift_magnitude_range")
+
+        return SurpriseConfig(
+            wind_enabled=wind_max > 0.0,
+            wind_force_range=(0.0, wind_max),
+            wind_change_freq=75,
+            sensor_noise_enabled=sensor_noise > 0.0 or dropout > 0.0,
+            sensor_noise_std=sensor_noise,
+            sensor_dropout_prob=dropout,
+            actuator_enabled=actuator < 0.999,
+            actuator_weakness=actuator,
+            goal_shift_enabled=goal_prob > 0.0 and goal_mag > 0.0,
+            goal_shift_prob=goal_prob,
+            goal_shift_magnitude=goal_mag,
+        )

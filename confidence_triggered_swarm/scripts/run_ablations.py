@@ -30,6 +30,7 @@ from confidence_triggered_swarm.utils.factory import (
     create_agent,
     run_frozen_episodes,
 )
+from confidence_triggered_swarm.utils.seeding import reset_env, set_global_seeds
 
 # paths and settings
 BASELINE_MODEL = "runs/baseline/best_model.pt"
@@ -80,7 +81,7 @@ def _run_frozen(config: dict, obs_dim: int, act_dim: int, device: str) -> Dict[s
     agent = create_agent(config, obs_dim, act_dim, device)
     agent.load(BASELINE_MODEL)
 
-    env = create_env(config, severity=SEVERITY, gui=False)
+    env = create_env(config, severity=SEVERITY, gui=False, seed=SEED)
     deterministic_eval = config.get("evaluation", {}).get("deterministic_actions", True)
     results = run_frozen_episodes(
         agent,
@@ -89,6 +90,8 @@ def _run_frozen(config: dict, obs_dim: int, act_dim: int, device: str) -> Dict[s
         device=device,
         label="frozen/severe",
         deterministic=deterministic_eval,
+        base_seed=SEED,
+        seed_stream=100,
     )
     env.close()
 
@@ -108,8 +111,8 @@ def _run_lifelong(
     agent = create_agent(config, obs_dim, act_dim, device)
     agent.load(BASELINE_MODEL)
 
-    clean_env = create_env(config, severity="clean", gui=False)
-    surprise_env = create_env(config, severity=SEVERITY, gui=False)
+    clean_env = create_env(config, severity="clean", gui=False, seed=SEED)
+    surprise_env = create_env(config, severity=SEVERITY, gui=False, seed=SEED)
 
     monitor = ConfidenceMonitor(
         policy=agent.policy,
@@ -134,6 +137,8 @@ def _run_lifelong(
         replay_buffer_size=adapt_cfg.get("replay_buffer_size", 10000),
         config=config,
         device=device,
+        base_seed=SEED,
+        seed_stream=200,
     )
 
     trainer.setup(clean_env, n_calibration_episodes=5)
@@ -205,8 +210,7 @@ def _print_table(results: Dict[str, Any], total_elapsed: float) -> None:
 def main() -> None:
     start_time = time.time()
 
-    np.random.seed(SEED)
-    torch.manual_seed(SEED)
+    set_global_seeds(SEED)
 
     base_config = load_config()
     base_config.setdefault("evaluation", {})["n_eval_episodes"] = N_EPISODES
@@ -214,8 +218,8 @@ def main() -> None:
     device = _resolve_device()
 
     # get obs/act dims
-    tmp_env = create_env(base_config, severity="clean", gui=False)
-    obs_sample, _ = tmp_env.reset()
+    tmp_env = create_env(base_config, severity="clean", gui=False, seed=SEED)
+    obs_sample, _ = reset_env(tmp_env, SEED, 0, 1)
     obs_dim = obs_sample.shape[-1] if obs_sample.ndim > 1 else obs_sample.shape[0]
     act_dim = tmp_env.action_space.shape[-1]
     tmp_env.close()

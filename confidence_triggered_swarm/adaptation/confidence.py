@@ -19,6 +19,7 @@ import torch
 from numpy.typing import NDArray
 
 from confidence_triggered_swarm.algorithms.policy import ActorCritic
+from confidence_triggered_swarm.utils.seeding import reset_env
 
 
 class ConfidenceMonitor:
@@ -60,7 +61,13 @@ class ConfidenceMonitor:
 
     # -- calibration --
 
-    def calibrate(self, env: Any, n_episodes: int = 5) -> None:
+    def calibrate(
+        self,
+        env: Any,
+        n_episodes: int = 5,
+        base_seed: int | None = None,
+        seed_stream: int = 0,
+    ) -> None:
         """Run policy on clean env to get baseline entropy/variance stats.
 
         These are used to z-score normalize future readings.
@@ -71,7 +78,7 @@ class ConfidenceMonitor:
         self.policy.eval()
 
         for _ep in range(n_episodes):
-            obs, _info = env.reset()
+            obs, _info = reset_env(env, base_seed, _ep, seed_stream)
             done = False
             while not done:
                 obs_tensor = torch.as_tensor(obs, dtype=torch.float32).to(self.device)

@@ -12,11 +12,9 @@ import argparse
 import datetime
 from pathlib import Path
 
-import numpy as np
-import torch
-
 from confidence_triggered_swarm.configs import load_config
 from confidence_triggered_swarm.evaluation.evaluator import Evaluator
+from confidence_triggered_swarm.utils.seeding import set_global_seeds
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,11 +61,7 @@ def main() -> None:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         save_dir = str(Path("results") / f"eval_{timestamp}")
 
-    # seed
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+    set_global_seeds(seed)
 
     # check baseline exists
     baseline_path = Path(args.baseline_path)
@@ -87,6 +81,8 @@ def main() -> None:
         baseline_model_path=str(baseline_path),
         save_dir=save_dir,
         device=device_str,
+        seed=seed,
+        config_path=args.config,
     )
 
     if args.mode == "both":
@@ -96,7 +92,19 @@ def main() -> None:
     elif args.mode == "frozen":
         print("\nRunning frozen baseline evaluation...")
         frozen_results = evaluator.evaluate_frozen_baseline(severity_levels)
-        results = {"baseline": frozen_results}
+        results = {
+            "baseline": frozen_results,
+            "summary": {
+                "mode": args.mode,
+                "seed": seed,
+                "n_eval_episodes": config.get("evaluation", {}).get("n_eval_episodes", 50),
+                "severity_levels": severity_levels,
+                "baseline_model": str(baseline_path),
+                "device": str(evaluator.device),
+                "config_path": args.config,
+                "config": config,
+            },
+        }
         evaluator.save_results(results, "frozen_results.json")
 
         # print table
@@ -111,7 +119,19 @@ def main() -> None:
     elif args.mode == "lifelong":
         print("\nRunning lifelong adaptation evaluation...")
         lifelong_results = evaluator.evaluate_lifelong(severity_levels)
-        results = {"lifelong": lifelong_results}
+        results = {
+            "lifelong": lifelong_results,
+            "summary": {
+                "mode": args.mode,
+                "seed": seed,
+                "n_eval_episodes": config.get("evaluation", {}).get("n_eval_episodes", 50),
+                "severity_levels": severity_levels,
+                "baseline_model": str(baseline_path),
+                "device": str(evaluator.device),
+                "config_path": args.config,
+                "config": config,
+            },
+        }
         evaluator.save_results(results, "lifelong_results.json")
 
         print(f"\n{'Severity':<12} | {'Reward':>10} | {'Conf':>8} | {'WP':>6} | "

@@ -30,6 +30,7 @@ from confidence_triggered_swarm.utils.factory import (
     create_agent,
     run_frozen_episodes,
 )
+from confidence_triggered_swarm.utils.seeding import reset_env, set_global_seeds
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,10 +113,7 @@ def main() -> None:
         save_dir = Path("runs") / f"continual_{ts}"
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+    set_global_seeds(seed)
 
     phases = ["clean", "mild", "moderate", "severe"]
     baseline_path = args.baseline_path
@@ -124,8 +122,8 @@ def main() -> None:
     print(f"  phases={phases}  n_adapt={n_adapt}  n_eval={n_eval}  save_dir={save_dir}")
     print(f"  baseline: {baseline_path}")
 
-    clean_probe = create_env(config, severity="clean", gui=gui)
-    obs_sample, _ = clean_probe.reset()
+    clean_probe = create_env(config, severity="clean", gui=gui, seed=seed)
+    obs_sample, _ = reset_env(clean_probe, seed, 0, 1)
     obs_dim = obs_sample.shape[-1] if obs_sample.ndim > 1 else obs_sample.shape[0]
     act_dim = clean_probe.action_space.shape[-1]
     clean_probe.close()
@@ -137,7 +135,7 @@ def main() -> None:
     frozen_agent = create_agent(config, obs_dim, act_dim, device=device_str)
     frozen_agent.load(baseline_path)
 
-    cal_env = create_env(config, severity="clean", gui=False)
+    cal_env = create_env(config, severity="clean", gui=False, seed=seed)
     monitor = ConfidenceMonitor(
         policy=ll_agent.policy,
         confidence_threshold=adapt_cfg.get("confidence_threshold", 0.5),
@@ -161,6 +159,8 @@ def main() -> None:
         replay_buffer_size=adapt_cfg.get("replay_buffer_size", 10000),
         config=config,
         device=device_str,
+        base_seed=seed,
+        seed_stream=200,
     )
     trainer.setup(cal_env, n_calibration_episodes=5)
     cal_env.close()
@@ -176,7 +176,7 @@ def main() -> None:
 
     def get_env(severity: str) -> Any:
         if severity not in env_cache:
-            env_cache[severity] = create_env(config, severity=severity, gui=False)
+            env_cache[severity] = create_env(config, severity=severity, gui=False, seed=seed)
         return env_cache[severity]
 
     for i, phase_sev in enumerate(phases):
@@ -197,6 +197,8 @@ def main() -> None:
             device=device_str,
             label=f"continual/frozen/{phase_sev}",
             deterministic=deterministic_eval,
+            base_seed=seed,
+            seed_stream=300 + i,
         )
         per_episode["frozen"].extend(fr_stats.get("all_rewards", []))
 
@@ -212,6 +214,8 @@ def main() -> None:
                 device=device_str,
                 label=f"R_ll[{i},{j}] {eval_sev}",
                 deterministic=deterministic_eval,
+                base_seed=seed,
+                seed_stream=400 + i * 10 + j,
             )
             fr_r = run_frozen_episodes(
                 frozen_agent,
@@ -220,6 +224,8 @@ def main() -> None:
                 device=device_str,
                 label=f"R_fr[{i},{j}] {eval_sev}",
                 deterministic=deterministic_eval,
+                base_seed=seed,
+                seed_stream=500 + i * 10 + j,
             )
             R_ll[i, j] = ll_r["mean_reward"]
             R_fr[i, j] = fr_r["mean_reward"]
@@ -262,6 +268,8 @@ def main() -> None:
             "n_eval_episodes": n_eval,
             "baseline_path": baseline_path,
             "device": device_str,
+            "config_path": args.config,
+            "config": config,
         },
     }
 

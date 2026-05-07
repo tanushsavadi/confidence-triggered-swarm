@@ -10,7 +10,6 @@ import datetime
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from gym_pybullet_drones.utils.enums import (
     ActionType,
@@ -23,6 +22,7 @@ from confidence_triggered_swarm.algorithms.ppo import PPOAgent
 from confidence_triggered_swarm.configs import load_config
 from confidence_triggered_swarm.envs.formation_aviary import FormationAviary
 from confidence_triggered_swarm.utils.logger import MetricsLogger
+from confidence_triggered_swarm.utils.seeding import set_global_seeds
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,11 +62,7 @@ def main() -> None:
         save_dir = Path("runs") / f"baseline_{timestamp}"
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # seed everything
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+    set_global_seeds(seed)
 
     print(f"Training IPPO baseline | seed={seed} | timesteps={total_timesteps:,}")
     print(f"  drones={env_cfg['num_drones']}  rollout={train_cfg['rollout_steps']}  "
