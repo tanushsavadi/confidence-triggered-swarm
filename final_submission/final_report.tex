@@ -1,7 +1,6 @@
 \documentclass{article}
 
-% For the class final report, use a nonanonymous NeurIPS-style preprint.
-% Place the official neurips_2026.sty next to this file or on the TeX path.
+% Nonanonymous NeurIPS-style preprint for the CS 590NN/690NN final report.
 \usepackage[preprint]{neurips_2026}
 
 \usepackage[utf8]{inputenc}
@@ -12,11 +11,10 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage{nicefrac}
 \usepackage{microtype}
 \usepackage{xcolor}
 
-\graphicspath{{../runs/professor_ready/}}
+\graphicspath{{../runs/professor_ready/}{../runs/extension/validation/}}
 
 \title{Confidence-Triggered Lifelong Adaptation for Drone Swarms Under Post-Training Surprises}
 
@@ -39,111 +37,145 @@
 \maketitle
 
 \begin{abstract}
-Reinforcement learning policies for drone swarms are usually trained in idealized simulation, but deployment conditions can shift through wind, sensor corruption, actuator degradation, and changing goals. We build a confidence-triggered lifelong adaptation system for a two-drone formation task in PyBullet. A shared-policy Independent PPO baseline is trained only on clean formation flight. At deployment time, a confidence monitor combines policy entropy and Monte Carlo dropout variance; when confidence falls and the episode is usable, the policy adapts between episodes using reward-weighted updates with KL anchoring, clean replay, and Elastic Weight Consolidation. In the saved single-seed evaluation, lifelong adaptation improves mean reward over the frozen policy on clean (+4.1\%), mild surprise (+50.8\%), and severe surprise (+54.7\%), but underperforms on moderate surprise (-8.5\%). A clean-after-severe forgetting check shows no catastrophic forgetting, and a sequential clean-to-severe continual-learning run directly re-evaluates all severities after each phase. The result supports a careful claim: the system demonstrates clean retention and partial robustness under post-training surprise, while stronger conclusions require multi-seed validation and better adaptation triggers.
+Reinforcement learning policies for drone swarms are often trained in clean simulation, but deployment conditions can change through wind, sensor corruption, actuator degradation, and shifted goals. This project studies a two-drone formation task in PyBullet where a shared-policy Independent PPO controller is trained only on clean flight and then evaluated under post-training surprises. I build a confidence-triggered lifelong adaptation layer: entropy and Monte Carlo dropout variance are calibrated on clean rollouts, low-confidence usable episodes are used for between-episode reward-weighted updates, and KL anchoring, clean replay, and Elastic Weight Consolidation protect the original policy. The final validation evaluates five methods over three controlled evaluation seeds and 75 episodes per severity. The best clean-retaining tuned variant, reward-weighted rescue, nearly preserves clean reward ($-0.33\%$) and improves reward under mild ($+17.8\%$) and severe ($+39.2\%$) surprise, but it substantially underperforms the frozen policy under moderate surprise ($-31.5\%$). Success rates remain near zero. The result is therefore mixed but informative: confidence-triggered adaptation gives partial reward recovery without clear clean collapse in this simplified setting, while the moderate condition exposes a real stability-plasticity failure.
 \end{abstract}
 
 \section{Introduction}
 
-Autonomous drone swarms are attractive because multiple agents can distribute sensing and control across space, but learned policies remain brittle when the deployment environment differs from training. A policy trained in a clean simulator may fail under wind, noisy sensors, actuator wear, or shifted waypoints. Retraining from scratch is expensive, while unconstrained online adaptation can overwrite skills that were already learned.
+Drone swarms are useful because multiple agents can distribute sensing and control across space, but learned swarm policies are still brittle when the deployment setting differs from the simulator used for training. A controller that works in a clean formation-flight task may face wind, noisy observations, reduced actuator authority, or a changed waypoint after training. Retraining from scratch is expensive, while unrestricted online updates can overwrite the behavior that made the original policy useful.
 
-This project studies a narrower but concrete version of that problem: can a small drone swarm adapt to post-training surprises while retaining clean-task performance? We train a shared-policy Independent PPO (IPPO) controller on clean two-drone formation flight, then evaluate it under a controlled surprise suite. We add a confidence-triggered lifelong layer that only adapts between episodes and uses explicit anti-forgetting safeguards.
+This project asks a narrower question: can a clean-trained drone-swarm policy adapt to post-training surprises while keeping its clean-task skill? I train a shared-parameter Independent PPO (IPPO) policy for two Crazyflie-style drones in a formation waypoint task. The baseline is not trained with surprise randomization. After training, I inject controlled perturbations and compare a frozen policy against conservative confidence-triggered adaptation, a no-gate always-adapt baseline, and tuned adaptation variants.
 
-The novelty is not a new optimizer in isolation. The contribution is the integrated evaluation pipeline: a post-training surprise suite for formation flight, a dual-signal adaptation trigger, reward-weighted between-episode updates, anti-forgetting regularization, and a sequential continual-learning matrix that re-tests clean performance after later adaptation phases. This last matrix directly addresses whether adaptation to harder conditions damages the original clean skill.
+The novelty is not any one component by itself. Entropy, dropout uncertainty, replay, KL regularization, and EWC all have prior roots. The contribution is the integrated pipeline and evaluation framing: a clean-trained formation policy, a post-training surprise suite, a dual-signal adaptation trigger, reward-weighted between-episode updates, explicit anti-forgetting safeguards, and a sequential continual-learning matrix that re-tests clean performance after later surprise phases. That last piece matters because reward recovery under surprise would be less useful if the original clean behavior disappeared.
+
+Concretely, I make four contributions:
+\begin{itemize}
+  \item a post-training surprise suite for two-drone formation flight, with wind, sensor noise/dropout, actuator weakening, and waypoint shifts added only after clean training;
+  \item a confidence-triggered adaptation loop that updates between episodes from usable low-confidence experience while anchoring to the clean policy;
+  \item an extension evaluation protocol that runs frozen, current lifelong, always-adapt, improved PPO adaptation, and reward-weighted rescue across three controlled evaluation seeds;
+  \item supporting diagnostics for forgetting, ablations, and a sequential continual-learning matrix.
+\end{itemize}
 
 \section{Related work}
 
-\textbf{Continual reinforcement learning.} Continual learning studies sequential skill acquisition without catastrophic forgetting. Elastic Weight Consolidation (EWC) penalizes changes to weights that are important for earlier tasks \citep{kirkpatrick2017overcoming}. Replay-based methods reduce forgetting by mixing old data with new updates \citep{rolnick2019experience}, and policy consolidation adapts similar ideas to reinforcement learning \citep{kaplanis2019policy}. We use EWC, clean replay, and KL anchoring as practical safeguards during post-training policy adaptation.
+\textbf{Continual learning and forgetting.} Continual learning studies how a model can learn from changing data without catastrophically forgetting previous tasks. The survey-style chapter by \citet{van2024continual}, which I used as the main continual-learning framing reference, describes continual learning as learning from a non-stationary stream while retaining prior knowledge. That framing fits this project more closely than ordinary robustness evaluation: the question is not only whether surprise reward improves, but whether clean behavior survives after later adaptation.
 
-\textbf{Domain shift in robotics.} Domain randomization and sim-to-real work try to expose policies to variation before deployment \citep{tobin2017domain}. In contrast, our setting assumes a clean-trained baseline and studies post-hoc adaptation when surprises appear after training. The simulator is based on gym-pybullet-drones \citep{panerati2021learning}, which provides a multi-agent quadrotor environment with PyBullet physics.
+Regularization and replay are standard ways to reduce forgetting. Elastic Weight Consolidation (EWC) penalizes changes to parameters estimated to be important for older tasks \citep{kirkpatrick2017overcoming}. Replay-based approaches mix earlier experience into later updates \citep{rolnick2019experience}, and policy consolidation adapts related ideas to reinforcement learning \citep{kaplanis2019policy}. I use these ideas pragmatically: EWC, clean replay, and KL anchoring are not presented as new algorithms, but as safeguards around the post-training adaptation update.
 
-\textbf{Uncertainty and confidence in RL.} Uncertainty estimates have been used for exploration, safety, and out-of-distribution detection \citep{osband2016deep,lutjens2019safe}. We use uncertainty as a trigger for adaptation. The monitor combines policy entropy with Monte Carlo dropout variance, following the idea that dropout can approximate epistemic uncertainty in neural networks \citep{gal2016dropout}.
+\textbf{Multi-agent PPO and drone simulation.} PPO is the base policy-gradient method used here \citep{schulman2017proximal}. In multi-agent reinforcement learning, PPO-style methods are strong practical baselines: \citet{yu2022surprising} show that PPO-based multi-agent methods can be competitive in cooperative settings when implemented carefully. My controller is closer to IPPO than MAPPO: both drones share actor-critic parameters and act from local observations, but I do not use a centralized critic. The simulator builds on gym-pybullet-drones, which provides PyBullet-based quadrotor environments for reinforcement learning \citep{panerati2021learning}.
+
+\textbf{Robust RL and sim-to-real.} Domain randomization exposes policies to variation during training so that deployment shifts are less surprising \citep{tobin2017domain}. Other robust-RL work trains against model ensembles or adversaries to improve generalization under dynamics changes \citep{rajeswaran2017epopt,pinto2017robust}. This project is intentionally different. The baseline is clean-trained, and surprises are introduced after training. That makes the setup less powerful than domain randomization, but it directly tests whether post-hoc confidence-triggered adaptation can recover some performance without destroying the clean skill.
+
+\textbf{Uncertainty and confidence in RL.} Uncertainty estimates have been used for exploration, safety, and out-of-distribution detection \citep{osband2016deep,lutjens2019safe}. MC dropout can be interpreted as an approximate Bayesian uncertainty estimate for neural networks \citep{gal2016dropout}. Here, uncertainty is not the exploration objective. It is a trigger that decides whether recent deployment data should be used for adaptation.
 
 \section{Task and surprise suite}
 
-\textbf{Formation task.} The environment contains two quadrotors that must move through waypoints while maintaining a target inter-drone spacing. Each drone receives kinematic observations plus relative waypoint information. The shared policy outputs velocity-level commands, which are handled by the simulator's low-level controller. The reward combines waypoint tracking, formation keeping, waypoint bonuses, collision penalties, survival reward, and boundary penalties.
+\textbf{Formation task.} The environment contains two CF2X drones in PyBullet. The swarm centroid must move through a short waypoint course while the drones maintain a target spacing of 0.5 m. Each episode lasts up to 15 simulated seconds, with physics at 240 Hz and control at 30 Hz. Each drone observes the base kinematic state from gym-pybullet-drones plus the relative offset to the current waypoint. The shared policy outputs velocity-level actions, and the simulator's low-level controller converts those commands to drone control.
 
-\textbf{Surprise levels.} We evaluate four severity levels. Clean has no perturbation. Mild adds small wind and sensor noise. Moderate increases wind and noise and adds actuator weakness. Severe includes all perturbations plus stochastic waypoint shifts.
+The reward combines waypoint tracking, formation keeping, waypoint bonuses, collision penalties, a small survival reward, and penalties for unsafe altitude or excessive tilt. Episodes terminate when all waypoints are reached and truncate on timeout, out-of-bounds behavior, low altitude, or excessive tilt.
+
+\textbf{Surprise levels.} The \texttt{SurpriseWrapper} injects wind forces, sensor noise, optional sensor dropout, actuator weakness, and stochastic waypoint shifts. These perturbations are used after baseline training, not during clean baseline training. Table~\ref{tab:surprises} summarizes the canonical presets.
 
 \begin{table}[t]
   \centering
+  \small
   \caption{Surprise presets used in the saved evaluation artifacts.}
   \label{tab:surprises}
-  \begin{tabular}{lcccl}
+  \begin{tabular}{lccccc}
     \toprule
-    Severity & Wind max (N) & Sensor $\sigma$ & Actuator scale & Goal shift \\
+    Severity & Wind max (N) & Sensor $\sigma$ & Dropout & Actuator scale & Goal shift \\
     \midrule
-    clean & 0.00 & 0.00 & 1.00 & none \\
-    mild & 0.02 & 0.01 & 1.00 & none \\
-    moderate & 0.05 & 0.02 & 0.85 & none \\
-    severe & 0.10 & 0.05 & 0.70 & $p=0.001$, 0.1 m \\
+    clean & 0.00 & 0.00 & 0.00 & 1.00 & none \\
+    mild & 0.02 & 0.01 & 0.00 & 1.00 & none \\
+    moderate & 0.05 & 0.02 & 0.02 & 0.85 & none \\
+    severe & 0.10 & 0.05 & 0.05 & 0.70 & $p=0.001$, 0.1 m \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \section{Method}
 
-\textbf{Baseline policy.} We train a shared-parameter IPPO policy. Each drone acts from its own observation, but both drones share the same actor-critic network. The policy network has two hidden layers of 256 units with Tanh activations and Monte Carlo dropout. PPO uses clipped policy updates, generalized advantage estimation, value loss, entropy regularization, and gradient clipping \citep{schulman2017proximal}.
+\textbf{Clean IPPO baseline.} I use a shared-parameter IPPO controller. Both drones act from their own observations, but the actor-critic weights are shared. The policy is a two-layer MLP with 256 hidden units per layer, Tanh activations, a Gaussian actor head, a critic head, and dropout layers with probability 0.1. PPO uses clipped policy updates, generalized advantage estimation, entropy regularization, value loss, and gradient clipping \citep{schulman2017proximal}. The canonical checkpoint is trained for one million timesteps with seed 42.
 
-\textbf{Confidence trigger.} Before deployment, the monitor is calibrated on clean episodes. At evaluation time it computes mean policy entropy and MC-dropout action variance, normalizes both against clean calibration statistics, and blends the resulting confidence scores. Adaptation is triggered when rolling confidence or episode-level confidence falls below threshold.
+\textbf{Confidence trigger.} Before deployment, the confidence monitor is calibrated on clean episodes. At evaluation time it computes two signals for each observation: policy entropy and MC-dropout action variance from 10 stochastic forward passes. Each signal is normalized against the clean calibration statistics, mapped into a confidence value, and combined with a 70/30 weighting toward entropy. The rolling confidence window has length 30. Adaptation can fire when rolling confidence is low, or when the episode-level confidence is low and enough usable replay data exists.
 
-\textbf{Adaptation update.} Adaptation occurs between episodes, not mid-episode. Episodes must pass a quality gate before their transitions enter replay. The default update is reward-weighted behavior cloning on recent transitions, with higher weight for better-rewarded transitions.
+\textbf{Episode quality gate.} Not every low-confidence episode should be learned from. Short crashes can teach the policy to imitate failure. An episode is added to the adaptation replay buffer only if it lasts at least 30 steps and has mean per-step reward at least $-5.0$. This gate is conservative, but it keeps the adaptation loop from treating unusable failures as training data.
 
-\textbf{Anti-forgetting safeguards.} We use three safeguards. First, a KL penalty keeps the current policy close to a frozen clean-policy copy. Second, clean replay mixes calibration transitions into adaptation minibatches. Third, EWC penalizes changes to parameters with high Fisher information under clean data:
+\textbf{Reward-weighted adaptation.} Adaptation happens between episodes. The main method uses reward-weighted behavior cloning over recent accepted transitions. Rewards are standardized, clipped, passed through a softmax weighting, and used to scale the log-probability objective so higher-rewarded transitions receive larger gradient weight. Each triggered update runs for five epochs with learning rate $10^{-4}$.
+
+\textbf{Anti-forgetting safeguards.} Three mechanisms protect the clean policy. First, a KL penalty keeps the current policy close to a frozen clean-policy copy. Second, 20\% clean replay mixes calibration transitions into adaptation minibatches. Third, EWC penalizes movement away from clean-task parameters with high empirical Fisher information:
 \begin{equation}
-  L_{\mathrm{EWC}} = \frac{\lambda}{2}\sum_i F_i(\theta_i - \theta_i^*)^2.
+  L_{\mathrm{EWC}} = \frac{\lambda}{2}\sum_i F_i(\theta_i - \theta_i^*)^2,
+  \quad \lambda = 1000.
 \end{equation}
 
 \section{Experiments}
 
-All canonical results use seed 42. The main per-severity artifact is \texttt{runs/full_eval/evaluation_results.json}; the sequential continual artifact is \texttt{runs/continual_run/continual_results.json}; ablations are in \texttt{runs/ablations/ablation_results.json}. Figures are generated from those JSON files by \texttt{generate\_plots.py}.
+\subsection{Experimental setup and reproducibility}
 
-\subsection{Frozen degradation and lifelong adaptation}
+The final extension validation uses three controlled evaluation seeds, 75 episodes per severity, and the same clean-trained checkpoint for all methods. The validation compares five methods: \textsc{Frozen}, \textsc{Current lifelong}, \textsc{Always-adapt}, \textsc{Improved PPO}, and \textsc{Reward-weighted rescue}. PyBullet resets, environment resets, surprise RNGs, NumPy, Python, and PyTorch are seeded through the evaluation path. The validation summary is generated from \texttt{runs/extension/validation/aggregate\_summary.json}; the corresponding figure is saved as \texttt{runs/extension/validation/diagnostic\_reward\_retention.pdf}. The clean baseline checkpoint is \texttt{runs/baseline/best\_model.pt}.
 
-The clean-trained frozen policy degrades sharply under surprise. Lifelong adaptation improves reward on clean, mild, and severe in this run, but is worse on moderate. Table~\ref{tab:main-results} reports the saved 50-episode per-condition results.
+The screening stage used 25 episodes per severity for candidate selection and is saved in \texttt{runs/extension/screening/}. The final validation then increased the episode count and used the same protocol for every retained method. This matters because deep-RL comparisons are sensitive to randomness, reporting choices, and implementation details \citep{henderson2018deep,patterson2024empirical}. I report mean reward with standard error over the three evaluation seeds. These are still not confidence intervals over independently trained policies: all final validation results reuse one trained checkpoint. That one-training-seed constraint is the main statistical limitation of the project.
+
+\subsection{Final extension validation}
+
+The clean-trained frozen policy degrades sharply under surprise. In the final validation, frozen reward falls from 2011.6 on clean to 199.8 on mild, 119.3 on moderate, and 30.5 on severe. The adaptive methods do not uniformly solve this degradation. They improve mild and severe reward, but all adaptive variants underperform frozen on moderate. Table~\ref{tab:validation-results} reports the full method comparison.
 
 \begin{table}[t]
   \centering
-  \caption{Main per-severity results from the saved evaluator run.}
-  \label{tab:main-results}
-  \begin{tabular}{lrrrr}
+  \scriptsize
+  \caption{Final validation over three controlled evaluation seeds and 75 episodes per severity. Entries are reward mean $\pm$ standard error. All methods use the same clean-trained checkpoint.}
+  \label{tab:validation-results}
+  \begin{tabular}{lrrrrr}
     \toprule
-    Severity & Frozen reward & Lifelong reward & Change & Lifelong waypoints \\
+    Severity & Frozen & Current & Always-adapt & Improved PPO & Reward rescue \\
     \midrule
-    clean & 1305.2 & 1358.9 & +4.1\% & 0.82 \\
-    mild & 105.9 & 159.7 & +50.8\% & 0.52 \\
-    moderate & 49.4 & 45.2 & -8.5\% & 0.22 \\
-    severe & 27.3 & 42.2 & +54.7\% & 0.12 \\
+    clean & $2011.6 \pm 0.0$ & $1972.4 \pm 10.9$ & $1971.9 \pm 3.2$ & $1988.0 \pm 19.9$ & $\mathbf{2004.9 \pm 23.6}$ \\
+    mild & $199.8 \pm 16.9$ & $235.7 \pm 24.8$ & $238.2 \pm 26.4$ & $\mathbf{241.5 \pm 34.5}$ & $233.1 \pm 34.7$ \\
+    moderate & $\mathbf{119.3 \pm 13.3}$ & $77.4 \pm 10.6$ & $77.3 \pm 9.7$ & $78.3 \pm 11.0$ & $77.7 \pm 9.9$ \\
+    severe & $30.5 \pm 5.6$ & $\mathbf{38.6 \pm 3.9}$ & $38.1 \pm 3.8$ & $38.2 \pm 4.0$ & $38.3 \pm 4.0$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.82\linewidth]{fig1_frozen_vs_lifelong.pdf}
-  \caption{Frozen versus lifelong mean reward across surprise severity. The saved single-seed result shows gains on clean, mild, and severe, with a moderate-severity regression.}
-  \label{fig:frozen-vs-lifelong}
+  \includegraphics[width=0.84\linewidth]{diagnostic_reward_retention.pdf}
+  \caption{Reward recovery versus clean retention in the final validation. Adaptive methods cluster tightly: they improve mild and severe reward but do not fix the moderate condition.}
+  \label{fig:reward-retention}
 \end{figure}
 
-\subsection{Forgetting and ablations}
+The best clean-retaining tuned variant is \textsc{Reward-weighted rescue}: clean reward changes by only $-0.33\%$, mild improves by $+17.8\%$, and severe improves by $+39.2\%$ relative to frozen. \textsc{Improved PPO} gives the best mild reward ($+22.1\%$) and similar severe recovery ($+39.0\%$), but has a larger clean drop ($-1.17\%$). The difference between the tuned methods is small enough that the paper should not claim a decisive algorithmic win.
 
-The forgetting probe adapts on severe and then evaluates on clean. Clean reward is 1308.9 before adaptation and 1386.1 after adaptation, so the evaluator reports \texttt{forgetting\_detected: false}. This supports the retention claim for the saved seed, though not a multi-seed guarantee.
+Two negative results are central. First, every adaptive method is worse than frozen on moderate surprise, with drops of roughly 31\%. Second, success rates remain near zero across the final validation. The method improves partial behavior, especially reward and waypoint progress, but it does not make the surprised task reliably successful.
 
-The ablation run evaluates severe surprise with 15 episodes per variant. Removing individual safeguards can increase mean reward but also increases variance. The full method has lower variance, suggesting a stability-performance tradeoff.
+\textsc{Always-adapt} is also informative. It adapts on every clean episode and much more often than the confidence-gated methods, yet it is not clearly better. This weakens any claim that more adaptation is sufficient, and supports the narrower interpretation that the safeguards and gates mainly control the stability-plasticity tradeoff rather than producing a dominant recovery method.
+
+\subsection{Single-seed supporting diagnostics}
+
+The final validation is the primary result. The remaining diagnostics were run earlier on the seed-42 checkpoint and should be read as supporting evidence about failure modes and forgetting, not as independent proof of generalization.
+
+\subsubsection{Forgetting probe}
+
+A useful adaptation method should not recover from surprise by erasing the original task. The saved forgetting probe adapts under severe surprise and then evaluates on clean. Clean reward is 1308.9 (std. 325.5) before the severe-adaptation phase and 1386.1 (std. 306.2) afterward. Mean waypoints reached moves from 0.90 to 0.86, while success rate moves from 0.02 to 0.04. The evaluator reports \texttt{forgetting\_detected: false}.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.82\linewidth]{fig3_ablations.pdf}
-  \caption{Ablation results under severe surprise. Ablated variants can produce higher means but with substantially higher variance than the full method.}
-  \label{fig:ablations}
+  \includegraphics[width=0.78\linewidth]{fig4_forgetting.pdf}
+  \caption{Clean reward before and after severe adaptation. The run does not show catastrophic forgetting, although the result is still single-seed evidence.}
+  \label{fig:forgetting}
 \end{figure}
 
-\subsection{Sequential continual-learning matrix}
+The reward increase after adaptation should not be over-interpreted as proof that severe adaptation improves clean flight. The safer interpretation is that clean behavior does not collapse in this run. That is the key requirement for calling the system lifelong rather than only adaptive.
 
-The per-severity evaluator resets from the baseline for each severity. To directly test continual learning, we also run one sequence: clean, mild, moderate, severe. After each phase, the same lifelong policy is evaluated on every severity, producing a matrix $R[i,j]$ where row $i$ is the completed adaptation phase and column $j$ is the evaluation task. The matrix supports backward-transfer, forward-transfer, and remembering metrics commonly used in continual-learning diagnostics \citep{lopezpaz2017gradient,van2024continual}.
+\subsubsection{Sequential continual-learning matrix}
+
+The per-severity evaluator resets from the clean checkpoint for each condition. To test continual learning more directly, we also run one sequence: clean, then mild, then moderate, then severe. After each phase, the same lifelong policy is evaluated on every severity. This produces a matrix $R[i,j]$, where row $i$ is the adaptation phase completed and column $j$ is the evaluation condition. Matrix-style diagnostics support backward transfer, forward transfer, and remembering metrics used in continual-learning analyses \citep{lopezpaz2017gradient,van2024continual}.
 
 \begin{table}[t]
   \centering
-  \caption{Sequential continual-learning matrix for the lifelong policy. Rows are completed adaptation phases; columns are evaluation tasks.}
+  \small
+  \caption{Sequential continual-learning matrix for the lifelong policy. Rows are completed adaptation phases; columns are evaluation conditions.}
   \label{tab:continual-matrix}
   \begin{tabular}{lrrrr}
     \toprule
@@ -159,27 +191,61 @@ The per-severity evaluator resets from the baseline for each severity. To direct
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.90\linewidth]{fig6_continual_matrix.pdf}
-  \caption{Retroactive reward matrices for lifelong and frozen policies. The clean column shows that clean performance is explicitly re-tested after later adaptation phases.}
+  \includegraphics[width=0.92\linewidth]{fig6_continual_matrix.pdf}
+  \caption{Retroactive reward matrices for lifelong and frozen policies. The clean column is re-evaluated after each later phase, which directly tests whether clean performance was retained.}
   \label{fig:continual-matrix}
 \end{figure}
 
-The clean column remains in the same range across the sequence: 1316.0, 1261.3, 1406.2, and 1322.9. The final average reward is 393.1 for lifelong versus 412.9 for the frozen reference, while backward transfer is +15.4, forward transfer is +17.2, and remembering is 1.0. This is evidence of clean retention and positive transfer metrics, not evidence that lifelong adaptation dominates frozen performance on every metric.
+The clean column remains in the same range across phases: 1316.0, 1261.3, 1406.2, and 1322.9. The final average reward is 393.1 for lifelong and 412.9 for the frozen reference. Backward transfer is $+15.4$, forward transfer is $+17.2$, and remembering is 1.0. These numbers support clean retention and positive transfer metrics in this seed, but they do not show that lifelong adaptation dominates the frozen policy on every aggregate measure.
 
-\section{Discussion and limitations}
+\subsubsection{Ablations}
 
-The results show that post-training surprises are damaging for the clean-trained policy. The lifelong method recovers some reward under mild and severe surprise and retains clean performance in the forgetting and sequential probes. The moderate result is mixed, and the final continual average reward is lower than the frozen reference. The honest interpretation is that the project demonstrates a working retention-oriented adaptation pipeline, but the current trigger and objective are not strong enough for universal robustness.
+The ablation run evaluates severe surprise with 15 episodes per variant. Removing safeguards can increase mean reward, but the variance rises substantially. The full method has the lowest standard deviation in the ablation, which matches the design goal of conservative adaptation.
 
-Several limitations matter. All canonical results use one seed, so statistical confidence is limited. The swarm has only two drones. Severe absolute reward remains low. The confidence trigger is conservative, with a 2\% adaptation rate in the main per-severity run. The simulator is simplified, and the method adapts only between episodes. These constraints limit claims about real-world robustness and scaling.
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Severe-surprise ablation results. Higher means in ablated variants come with much higher variance.}
+  \label{tab:ablations}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Variant & Mean reward & Std. reward & Waypoints & Adaptations \\
+    \midrule
+    Frozen & 29.18 & 62.04 & 0.00 & 0 \\
+    Full method & 24.30 & 21.58 & 0.13 & 0 \\
+    No KL anchor & 53.13 & 77.84 & 0.07 & 1 \\
+    No clean replay & 46.21 & 59.91 & 0.27 & 1 \\
+    No EWC & 45.89 & 62.81 & 0.27 & 1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.84\linewidth]{fig3_ablations.pdf}
+  \caption{Ablation results under severe surprise. The full method trades peak reward for lower variance, while removing safeguards can produce higher but less stable reward.}
+  \label{fig:ablations}
+\end{figure}
+
+This ablation does not prove that every safeguard is necessary in every setting. It does show the tradeoff I cared about: the safeguards make the method cautious, and caution can reduce peak recovery. The full method also triggered zero adaptations in this shorter 15-episode ablation, while several ablated variants triggered once. That makes the ablation mainly a stability and trigger-sensitivity diagnostic, not a final ranking of severe-surprise performance.
+
+\section{Discussion, limitations, and safety}
+
+The main lesson is that post-training surprise is damaging for a clean-trained formation policy. Even mild wind and sensor noise sharply reduce frozen reward. The final validation shows partial recovery in mild and severe conditions with little clean degradation for the best clean-retaining tuned variant. That is the strongest supported claim.
+
+The limits are just as important. Moderate surprise remains a failure case: all adaptive methods lose roughly one third of frozen reward in that condition. Success rates stay near zero, so the method improves shaped reward and waypoint progress rather than reliably completing the task. All final validation results also use one trained checkpoint, so the three seeds measure controlled evaluation variation, not variation across independently trained policies. The system is tested with two drones, not a large swarm. Severe absolute reward remains low even after adaptation. The confidence-gated variants adapt rarely in the final validation, which means the method is more conservative than responsive. The simulation is simplified, and adaptation happens only between episodes. The final continual average reward is also lower than the frozen reference, so the system is not a universal performance win.
+
+There is also a safety limitation. This is simulation-only work and should not be read as a deployable drone-control method. In real hardware, online or post-episode adaptation could make unsafe behavior worse if the confidence trigger, quality gate, or reward signal is wrong. A real deployment would need hard safety constraints, hardware limits, human oversight, and tests under many more environment variations before any autonomous adaptation could be trusted.
 
 \section{Author contributions}
 
-\textbf{TODO\_AUTHOR\_CONTRIBUTIONS:} Replace this paragraph before submission with the verified division of work among Tanush Vijayakumar Savadi, Deveshi Singh, and Ron Kleinhause-Goldman. The course instructions explicitly require communicating who worked on which parts of the project. A suitable format is: environment and surprise suite; PPO baseline and training; confidence monitor and lifelong adaptation; continual-learning evaluation; plots, report, and presentation.
+I, Tanush Vijayakumar Savadi, did the technical implementation, experiments, analysis, figure generation, check-in video, final presentation deck, and final report integration. This includes the environment setup, surprise wrapper, PPO/IPPO training code, confidence monitor, between-episode adaptation loop, anti-forgetting safeguards, seeded extension runner, validation aggregation, ablations, and continual-learning evaluation. Ron Kleinhause-Goldman looked over the proposal and provided proposal-stage comments/edits. Deveshi Singh did not contribute substantive implementation, experiments, analysis, writing, or presentation work to the final project.
 
 \section{Conclusion}
 
-We built and evaluated a confidence-triggered lifelong adaptation system for drone swarms under post-training surprises. The system combines a clean-trained shared PPO policy, a controlled surprise suite, confidence-triggered between-episode updates, and anti-forgetting safeguards. The saved results show partial robustness and clean retention in a single-seed setting. The next steps are multi-seed validation, stronger adaptation objectives, larger swarms, richer surprises, and peer-help mechanisms.
+I built a confidence-triggered lifelong adaptation system for a clean-trained two-drone formation policy under post-training surprises. The system combines a controlled surprise suite, entropy and MC-dropout confidence monitoring, reward-weighted between-episode updates, and anti-forgetting safeguards. The final validation is mixed: adaptive methods improve mild and severe reward relative to frozen and can preserve clean reward, but they consistently fail on moderate surprise and do not produce reliable task success. The next steps are independent training seeds, a stronger domain-randomized baseline, larger swarms, better trigger calibration, stronger adaptation objectives, peer-help mechanisms between drones, and eventually sim-to-real testing.
 
+\clearpage
 \bibliographystyle{plainnat}
 \bibliography{references}
 
