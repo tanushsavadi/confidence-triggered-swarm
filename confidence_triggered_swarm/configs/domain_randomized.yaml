@@ -1,0 +1,10 @@
+domain_randomization:
+  wind_force_range: [0.0, 0.08]
+  sensor_noise_std_range: [0.0, 0.04]
+  sensor_dropout_prob_range: [0.0, 0.04]
+  actuator_weakness_range: [0.75, 1.0]
+  goal_shift_prob_range: [0.0, 0.0008]
+  goal_shift_magnitude_range: [0.0, 0.1]
+
+evaluation:
+  deterministic_actions: true

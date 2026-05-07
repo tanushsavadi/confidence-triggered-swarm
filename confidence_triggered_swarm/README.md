@@ -88,10 +88,12 @@ From [`configs/default.yaml`](configs/default.yaml):
 | Script | What it does |
 |--------|-------------|
 | [`train_baseline.py`](scripts/train_baseline.py) | Train IPPO on clean formation flight |
+| [`train_domain_randomized.py`](scripts/train_domain_randomized.py) | Train a robust baseline with per-episode domain randomization |
 | [`train_lifelong.py`](scripts/train_lifelong.py) | Full pipeline: train baseline, evaluate frozen, adapt, evaluate adapted (per severity, reset from baseline) |
 | [`train_continual.py`](scripts/train_continual.py) | Sequential continual learning: one agent adapts clean to mild to moderate to severe; retroactive `R[i,j]` matrix + CL metrics |
 | [`evaluate.py`](scripts/evaluate.py) | Standalone evaluation using the Evaluator class |
 | [`run_ablations.py`](scripts/run_ablations.py) | Ablation study; disables components one at a time |
+| [`run_extension_experiments.py`](scripts/run_extension_experiments.py) | Extension runner for seeded screening, final validation, continual checks, and aggregate summaries |
 | [`generate_plots.py`](scripts/generate_plots.py) | Figures from JSON: `--evaluation-results`, `--ablation-results`, optional `--continual-results` to `runs/professor_ready/` fig1 through fig8 |
 | [`test_env.py`](scripts/test_env.py) | Sanity check that the environment initializes and steps |
 | [`diagnose_episodes.py`](scripts/diagnose_episodes.py) | Debug tool; logs per-step states for a few episodes |

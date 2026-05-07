@@ -1,0 +1,15 @@
+adaptation:
+  method: reward_weighted_bc
+  force_adaptation: true
+  deterministic_rollouts: true
+  min_episode_steps: 30
+  min_adapt_reward: -5.0
+  adapt_batch_size: 32
+  adapt_epochs: 5
+  adapt_lr: 1.0e-4
+  clean_replay_ratio: 0.2
+  kl_anchor_coef: 0.5
+  ewc_lambda: 1000
+
+evaluation:
+  deterministic_actions: true
