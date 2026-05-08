@@ -130,9 +130,10 @@ there, which tells us this is not a universal robustness fix. It helps in some
 shifted conditions, but the trigger and update objective still need work.
 
 What we learned is that our method gives partial robustness while still
-preserving the clean behavior we trained for. These are single-seed results with
-seed 42, so the graph is directional evidence, not a statistically final
-conclusion."
+preserving the clean behavior we trained for. This slide is a seed-42 diagnostic
+from the presentation deck; the final written report adds a three-seed
+validation table and keeps the same honest conclusion: partial recovery, not a
+universal win."
 
 Transition
 "Since adaptation can help reward but still cause forgetting, the next slide
@@ -340,7 +341,8 @@ the original skill survived.
 The adaptation trigger and episode-quality gate are conservative. Moderate can
 sit in a region where the policy is degraded but does not always produce enough
 useful adaptation data. Severe produces clearer low-confidence signals, but the
-result is still noisy and single-seed.
+result is still noisy. The final three-seed validation keeps moderate as the
+clearest failure case.
 
 **Does severe improving mean severe is easier than moderate?**  
 No. It means the trigger and adaptation data behaved better for severe in this
@@ -348,13 +350,14 @@ seed. Severe may produce clearer low confidence signals, while moderate can be
 bad enough to hurt performance but not clear enough to trigger useful updates.
 
 **Can we claim statistical significance?**  
-No. The results are from one seed, so I would present them as directional
-evidence. Multi seed validation is the first thing I would do before making a
-stronger claim.
+No. The final report uses three controlled evaluation seeds, but all of them use
+one trained checkpoint. Independent training seeds would be needed before making
+a stronger statistical claim.
 
 **Why only one seed?**  
-Time and compute were the main constraints. The code is set up so more seeds can
-be run, but the current deck is honest that seed 42 is the reported run.
+Training time and compute were the main constraints. The evaluation path now
+uses three controlled seeds, but the trained checkpoint itself is still one
+clean-training seed.
 
 **What environment values were used?**  
 The main setup uses two CF2X drones in PyBullet, VEL actions, KIN observations

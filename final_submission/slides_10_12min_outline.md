@@ -23,7 +23,8 @@ matches `confidence_triggered_swarm_premium.pptx`, the current 10-slide deck.
 - "The baseline was trained on clean episodes only; surprises were introduced
   after training."
 - "The result is partial robustness, not a universal win."
-- "All canonical numbers here are single-seed results with seed 42."
+- "The slide figures are seed-42 diagnostics; the final written report adds
+  three controlled evaluation seeds for the main validation table."
 - "The clean-after-adaptation checks are the key evidence against catastrophic
   forgetting in this setting."
 

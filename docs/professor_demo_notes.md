@@ -5,7 +5,7 @@
 1. Start with the task: two drones must follow waypoints while maintaining formation.
 2. Show that the baseline is trained only on clean conditions.
 3. Show the surprise suite: wind, sensor noise, actuator weakness, and goal shift.
-4. Show frozen degradation with `fig2_degradation.png`.
+4. Show final validation with `runs/extension/validation/diagnostic_reward_retention.pdf`, or frozen degradation with `fig2_degradation.png` if presenting from the original deck.
 5. Explain the lifelong system: confidence trigger, reward-weighted update, KL anchor, clean replay, EWC.
 6. Show frozen vs lifelong with `fig1_frozen_vs_lifelong.png`.
 7. Show the forgetting check with `fig4_forgetting.png`.
@@ -16,7 +16,7 @@
 
 - The clean-trained policy performs well in the clean environment but collapses under even mild distribution shift.
 - The adaptation system is deliberately conservative: it adapts between episodes and uses safeguards to avoid overwriting clean-task behavior.
-- The per-severity result improves mild and severe surprise, but moderate is worse in this seed.
+- The final validation improves mild and severe reward for adaptive variants, but every adaptive method is worse than frozen on moderate.
 - The key addition after feedback is the sequential continual-learning run.
 - In that run, clean is evaluated after every later phase, so we directly check whether adaptation causes catastrophic forgetting.
 - Clean performance remains stable across the sequence, and BWT/FWT are positive.
@@ -33,13 +33,13 @@
 
 ## Short Script
 
-"We trained a shared PPO policy for two drones in a clean formation-flight environment. Then we tested it under post-training surprises: wind, sensor noise, actuator weakness, and shifted goals. The frozen clean policy is brittle, dropping from about 1305 reward on clean to about 106 on mild and 27 on severe.
+"We trained a shared PPO policy for two drones in a clean formation-flight environment. Then we tested it under post-training surprises: wind, sensor noise, actuator weakness, and shifted goals. In the final validation, the frozen clean policy is brittle, dropping from about 2012 reward on clean to about 200 on mild and 30 on severe.
 
 To respond, we built a confidence-triggered lifelong adaptation loop. The policy monitors entropy and MC-dropout variance; when confidence is low and the episode is usable, it performs between-episode fine-tuning. To reduce forgetting, we anchor the policy with a KL penalty, mix in clean replay, and add EWC.
 
-In the main evaluation, lifelong adaptation improves mild by about 51% and severe by about 55%, while moderate remains mixed. We also check clean after severe adaptation and do not observe catastrophic forgetting.
+In the final validation, adaptive variants improve mild and severe reward while mostly retaining clean reward, but moderate is a clear failure case. We also check clean after severe adaptation and do not observe catastrophic forgetting in the supporting seed-42 diagnostic.
 
-The feedback asked for a true continual-learning view, so we added a sequential run: clean to mild to moderate to severe. After each phase, we re-evaluate every condition. This matrix is the key result: clean is explicitly retested after mild, moderate, and severe. Clean reward stays in the same range, and the continual metrics show positive BWT and FWT in this seed. The honest conclusion is that we show clean retention and partial robustness, but multi-seed validation is future work."
+The feedback asked for a true continual-learning view, so we added a sequential run: clean to mild to moderate to severe. After each phase, we re-evaluate every condition. This matrix is the key result: clean is explicitly retested after mild, moderate, and severe. Clean reward stays in the same range, and the continual metrics show positive BWT and FWT in this seed. The honest conclusion is that we show clean retention and partial robustness, but not reliable task success."
 
 ## Commands For Reproduction
 
@@ -62,3 +62,11 @@ Run the sequential continual experiment again, if needed:
 ```
 
 The second command is expensive compared with figure generation. The saved canonical results are already present.
+
+Regenerate the final validation summary and diagnostic figure from saved outputs:
+
+```bash
+MPLCONFIGDIR=/private/tmp/mplcache ./.venv310/bin/python -m confidence_triggered_swarm.scripts.run_extension_experiments \
+  summarize \
+  --save-root runs/extension
+```

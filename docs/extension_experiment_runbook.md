@@ -1,8 +1,9 @@
 # Extension Experiment Runbook
 
-This runbook is for the post-deadline extension pass. The goal is to strengthen
-the evidence with controlled seeds, stronger baselines, and aggregate tables
-that can replace the current single-seed report numbers.
+This runbook records the extension pass that strengthened the evidence with
+controlled seeds, stronger adaptation comparisons, and aggregate tables. The
+final report now uses `runs/extension/validation/aggregate_summary.json` as its
+main empirical source.
 
 ## Quick Smoke Test
 
@@ -46,21 +47,23 @@ candidates with less than 5% clean reward drop and severe variance no worse than
 
 ## Stage 3: Final Validation
 
-After screening finishes, run:
+After screening finishes, run the final five-method validation:
 
 ```bash
 MPLCONFIGDIR=/private/tmp/mplcache ./.venv310/bin/python -m confidence_triggered_swarm.scripts.run_extension_experiments \
   validation \
   --validation-episodes 75 \
   --seeds 42,123,456 \
-  --tuned-method auto \
+  --methods frozen,current_default,always_adapt,improved_ppo,reward_weighted_rescue \
   --save-root runs/extension \
   --baseline-path runs/baseline/best_model.pt \
   --skip-existing
 ```
 
-This validates `frozen`, `current_default`, `always_adapt`, and the selected
-tuned method under the same protocol.
+This validates `frozen`, `current_default`, `always_adapt`, `improved_ppo`, and
+`reward_weighted_rescue` under the same protocol. The screening rule selected
+`improved_ppo`, but the final report also includes `reward_weighted_rescue`
+because it is the clean-retaining tuned variant.
 
 ## Stage 4: Continual Validation
 

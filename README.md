@@ -29,22 +29,26 @@ post-training shift, adapt between episodes, and avoid forgetting clean flight.
 | Build the final report and slides | `final_submission/README.md` |
 | Grab slide/report figures and know what each means | `docs/artifact_guide.md` |
 | Inspect module-level code structure | `confidence_triggered_swarm/README.md` |
-| Read the long-form writeup | `REPORT.md` |
+| Read the older long-form writeup | `REPORT.md` |
 | Check final submission readiness | `docs/final_submission_audit.md` |
 | Do the final repository push review | `docs/final_push_checklist.md` |
 
 ## Main Claim
 
-The saved single-seed results support a careful claim:
+The final report uses the extension validation as the main empirical result:
+three controlled evaluation seeds, 75 episodes per severity, and the same
+clean-trained checkpoint for every method. The saved results support a careful
+claim:
 
 - A clean-trained drone policy is brittle under post-training surprises.
-- Confidence-triggered adaptation improves reward on clean, mild, and severe
-  conditions in the canonical evaluator run.
-- Moderate surprise remains mixed, so the method is not a universal win.
+- Confidence-triggered adaptation partially recovers reward on mild and severe
+  surprises while mostly preserving clean reward.
+- Moderate surprise remains a clear failure case for every adaptive variant.
 - Clean performance is retained in the forgetting check and in the sequential
-  continual-learning matrix.
-- All canonical results are seed 42 only, so multi-seed validation is future
-  work.
+  continual-learning matrix, but those diagnostics are still seed-42 support
+  runs.
+- Success rates remain near zero, so the method improves shaped reward and
+  waypoint progress rather than reliably solving the surprised task.
 
 Use this phrasing in the report and presentation. Do not claim that lifelong
 adaptation beats frozen evaluation on every metric.
@@ -147,19 +151,26 @@ experiments to prepare slides or the report.
 | Artifact | Meaning |
 |---|---|
 | `runs/baseline/best_model.pt` | Clean-trained baseline checkpoint |
-| `runs/full_eval/evaluation_results.json` | Frozen vs lifelong per-severity evaluation and forgetting check |
+| `runs/extension/validation/aggregate_summary.json` | Final three-seed validation used by the report |
+| `runs/extension/validation/diagnostic_reward_retention.pdf` | Final report figure for reward recovery vs clean retention |
+| `runs/full_eval/evaluation_results.json` | Seed-42 frozen vs lifelong evaluation and forgetting check |
 | `runs/ablations/ablation_results.json` | Severe-surprise ablations for KL, clean replay, and EWC |
 | `runs/continual_run/continual_results.json` | Sequential clean, mild, moderate, severe continual-learning matrix |
 | `runs/professor_ready/` | PNG/PDF figures and a local README generated from the canonical JSONs |
 
-Main per-severity results from `runs/full_eval/evaluation_results.json`:
+Final validation results from
+`runs/extension/validation/aggregate_summary.json`:
 
-| Severity | Frozen reward | Lifelong reward | Change |
-|---|---:|---:|---:|
-| clean | 1305.2 | 1358.9 | +4.1% |
-| mild | 105.9 | 159.7 | +50.8% |
-| moderate | 49.4 | 45.2 | -8.5% |
-| severe | 27.3 | 42.2 | +54.7% |
+| Severity | Frozen | Current | Always-adapt | Improved PPO | Reward rescue |
+|---|---:|---:|---:|---:|---:|
+| clean | 2011.6 +/- 0.0 | 1972.4 +/- 10.9 | 1971.9 +/- 3.2 | 1988.0 +/- 19.9 | 2004.9 +/- 23.6 |
+| mild | 199.8 +/- 16.9 | 235.7 +/- 24.8 | 238.2 +/- 26.4 | 241.5 +/- 34.5 | 233.1 +/- 34.7 |
+| moderate | 119.3 +/- 13.3 | 77.4 +/- 10.6 | 77.3 +/- 9.7 | 78.3 +/- 11.0 | 77.7 +/- 9.9 |
+| severe | 30.5 +/- 5.6 | 38.6 +/- 3.9 | 38.1 +/- 3.8 | 38.2 +/- 4.0 | 38.3 +/- 4.0 |
+
+The report uses paired seed-level percent changes for method deltas. Under that
+definition, reward-weighted rescue preserves clean reward (-0.33%) and improves
+mild (+17.8%) and severe (+39.2%) reward, but drops on moderate (-31.5%).
 
 Sequential continual-learning clean retention from
 `runs/continual_run/continual_results.json`:
@@ -188,6 +199,12 @@ Use these files for the slide deck:
 | Fig 6 | `runs/professor_ready/fig6_continual_matrix.png` | Most important continual-learning slide |
 | Fig 7 | `runs/professor_ready/fig7_clean_retention.png` | Clean retention across phases |
 | Fig 8 | `runs/professor_ready/fig8_cl_metrics.png` | BWT, FWT, remembering, average reward |
+
+The final report's main validation figure is separate:
+
+| Figure | File | Use |
+|---|---|---|
+| Validation | `runs/extension/validation/diagnostic_reward_retention.pdf` | Reward recovery vs clean retention across final methods |
 
 An editable 10-slide PPTX for the May 4, 2026, 10-12 minute presentation has
 already been generated at:
@@ -224,7 +241,7 @@ confidence_triggered_swarm/
 
 runs/              saved checkpoints, JSON results, and generated figures
 docs/              professor brief, demo notes, artifact guide, audit docs
-final_submission/  NeurIPS-style report draft and 10-12 minute slide outline
+final_submission/  Compiled final report, report source, and 10-12 minute slide outline
 _research/         reference MAPPO/gym-pybullet-drones code, not core project code
 gym-pybullet-drones-install/
                    local editable copy of the simulator dependency
@@ -276,6 +293,14 @@ python -m confidence_triggered_swarm.scripts.evaluate \
   --save-dir runs/full_eval
 ```
 
+Run the final extension validation summary from saved outputs:
+
+```bash
+MPLCONFIGDIR=/private/tmp/mplcache ./.venv310/bin/python -m confidence_triggered_swarm.scripts.run_extension_experiments \
+  summarize \
+  --save-root runs/extension
+```
+
 Run the sequential continual-learning evaluation:
 
 ```bash
@@ -294,15 +319,20 @@ Check final submission readiness:
 
 The final handoff folder is `final_submission/`.
 
-Current manual items:
+Current state:
 
-1. Add the official `neurips_2026.sty` file before compiling the report.
-2. Replace the author-contribution placeholder in `final_submission/final_report.tex`.
-3. Compile the PDF and confirm the report is 5-9 pages excluding references.
+- `final_submission/final_report.pdf` is compiled.
+- `final_submission/final_report.tex` includes author contributions and the
+  public GitHub repository link.
+- `final_submission/neurips_2026.sty` is present.
+- `check_final_readiness` passes all automated checks except the local
+  `pdfinfo` page-count check, because `pdfinfo` is not installed. The LaTeX log
+  reports an 8-page PDF.
 
 ## Future Work
 
-- Multi-seed validation with confidence intervals.
+- Independent training seeds, not only controlled evaluation seeds from one
+  trained checkpoint.
 - Larger swarms beyond two drones.
 - Stronger adaptation objectives and better confidence triggers.
 - Peer-help or communication between drones.

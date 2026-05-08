@@ -21,6 +21,8 @@ That split matters:
   under clean, mild, moderate, and severe surprise presets.
 - `train_continual.py` loads the clean baseline once, adapts through the
   severity sequence, and re-evaluates all severities after each phase.
+- `run_extension_experiments.py` runs the final seeded screening/validation
+  workflow and writes aggregate summaries used by the report.
 
 ## Module Overview
 
@@ -54,7 +56,17 @@ Custom Gym environments built on top of gym-pybullet-drones.
 
 ### `configs/`
 
-- [`default.yaml`](configs/default.yaml) - Single source of truth for all hyperparameters. Scripts load this by default; command-line args override specific values like `--total-timesteps`, `--seed`, etc.
+- [`default.yaml`](configs/default.yaml) - Base hyperparameters. Scripts load
+  this by default; command-line args override specific values like
+  `--timesteps`, `--seed`, and `--save-dir`.
+- [`always_adapt.yaml`](configs/always_adapt.yaml) - Forces frequent adaptation
+  for a comparison against confidence-gated variants.
+- [`improved_ppo.yaml`](configs/improved_ppo.yaml) and related improved PPO
+  configs - PPO-style adaptation variants used in screening and validation.
+- [`improved_reward_weighted_rescue.yaml`](configs/improved_reward_weighted_rescue.yaml)
+  - Clean-retaining reward-weighted adaptation variant used in the final report.
+- [`domain_randomized.yaml`](configs/domain_randomized.yaml) - Domain
+  randomization settings for the optional robust-training baseline.
 
 ### `scripts/`
 
@@ -64,6 +76,8 @@ Entry points. All runnable as `python -m confidence_triggered_swarm.scripts.<nam
 
 - [`logger.py`](utils/logger.py) - Dual logger: writes TensorBoard events and CSV files. Used during both training and evaluation.
 - [`factory.py`](utils/factory.py) - Factory functions for creating environments, policies, and trainers from config.
+- [`seeding.py`](utils/seeding.py) - Centralized seeding for Python, NumPy,
+  PyTorch, Gym spaces, and PyBullet resets.
 
 ## Key Hyperparameters
 
@@ -101,13 +115,16 @@ From [`configs/default.yaml`](configs/default.yaml):
 
 ## Config
 
-[`configs/default.yaml`](configs/default.yaml) is the single config file. All scripts read it on startup. You can override specific values from the command line:
+[`configs/default.yaml`](configs/default.yaml) is the base config. Most scripts
+read it on startup, and extension experiments pass alternate configs with
+`--config` when comparing adaptation variants. You can override specific values
+from the command line:
 
 ```bash
 python -m confidence_triggered_swarm.scripts.train_baseline \
-    --total-timesteps 500000 \
+    --timesteps 500000 \
     --seed 42 \
-    --output-dir runs/baseline
+    --save-dir runs/baseline
 ```
 
 If you want to change something deeper (network size, EWC lambda, etc.), edit the YAML directly.

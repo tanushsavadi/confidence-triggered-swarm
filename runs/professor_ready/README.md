@@ -1,9 +1,12 @@
 # Professor-Ready Figures
 
-This folder contains generated figures for the final report and slide deck.
-Each figure is saved as both PNG and PDF.
+This folder contains generated seed-42 diagnostic figures for the slide deck and
+supporting report discussion. Each figure is saved as both PNG and PDF.
 
 Use PNGs for slides. Use PDFs for the NeurIPS-style LaTeX report.
+
+The final report's main validation table and reward-retention figure come from
+`runs/extension/validation/`, not this folder.
 
 ## Figure Map
 

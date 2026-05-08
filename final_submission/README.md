@@ -11,7 +11,8 @@ For a broader artifact map, read `../docs/artifact_guide.md`.
 | File | Purpose |
 |---|---|
 | `confidence_triggered_swarm_premium.pptx` | Editable 10-slide PowerPoint deck for the final 10-12 minute presentation. |
-| `final_report.tex` | NeurIPS-style report draft tied to canonical JSON outputs and figures. |
+| `final_report.tex` | NeurIPS-style report source tied to canonical JSON outputs and figures. |
+| `final_report.pdf` | Compiled 8-page final report. |
 | `references.bib` | BibTeX entries used by the report. |
 | `slides_10_12min_outline.md` | Timed 10-12 minute presentation plan with figure mapping. |
 | `slide_speaker_notes.md` | Complete rehearsal script for the premium 10-slide deck. |
@@ -104,4 +105,4 @@ From the repository root:
 
 Known manual item: the local readiness checker cannot verify the PDF page count
 because `pdfinfo` is not installed, but the LaTeX log reports:
-`Output written on final_report.pdf (8 pages, 254585 bytes).`
+`Output written on final_report.pdf (8 pages, 267282 bytes).`

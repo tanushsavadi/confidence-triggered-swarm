@@ -2,7 +2,14 @@
 
 **CS 690NN — Neural Networks Final Project**
 
-> **Documentation sync (2026).** **Section 4** tables and embedded figures match **`runs/full_eval/evaluation_results.json`** and **`runs/ablations/ablation_results.json`** (seed 42) unless noted. Figures are **`runs/professor_ready/fig*_*.png`** from `generate_plots.py`. **Sequential continual learning** (matrix, BWT/FWT, learning-over-time): **`runs/continual_run/continual_results.json`** -> **fig5-fig8**.
+> **Superseded by final report (May 2026).** This is the older long-form
+> seed-42 writeup. The submission-ready report is
+> `final_submission/final_report.pdf`, and its main empirical table comes from
+> `runs/extension/validation/aggregate_summary.json` (three controlled
+> evaluation seeds, 75 episodes per severity). Section 4 below is still useful
+> as supporting background for the seed-42 professor-ready figures, forgetting
+> check, ablations, and continual-learning matrix, but it is not the final
+> source of truth for report numbers.
 
 ---
 
