@@ -36,8 +36,12 @@
 
 \maketitle
 
+\begin{center}
+\small Code and artifacts: \url{https://github.com/tanushsavadi/confidence-triggered-swarm}
+\end{center}
+
 \begin{abstract}
-Reinforcement learning policies for drone swarms are often trained in clean simulation, but deployment conditions can change through wind, sensor corruption, actuator degradation, and shifted goals. This project studies a two-drone formation task in PyBullet where a shared-policy Independent PPO controller is trained only on clean flight and then evaluated under post-training surprises. I build a confidence-triggered lifelong adaptation layer: entropy and Monte Carlo dropout variance are calibrated on clean rollouts, low-confidence usable episodes are used for between-episode reward-weighted updates, and KL anchoring, clean replay, and Elastic Weight Consolidation protect the original policy. The final validation evaluates five methods over three controlled evaluation seeds and 75 episodes per severity. The best clean-retaining tuned variant, reward-weighted rescue, nearly preserves clean reward ($-0.33\%$) and improves reward under mild ($+17.8\%$) and severe ($+39.2\%$) surprise, but it substantially underperforms the frozen policy under moderate surprise ($-31.5\%$). Success rates remain near zero. The result is therefore mixed but informative: confidence-triggered adaptation gives partial reward recovery without clear clean collapse in this simplified setting, while the moderate condition exposes a real stability-plasticity failure.
+Reinforcement learning policies for drone swarms are often trained in clean simulation, but deployment conditions can change through wind, sensor corruption, actuator degradation, and shifted goals. This project studies a two-drone formation task in PyBullet where a shared-policy Independent PPO controller is trained only on clean flight and then evaluated under post-training surprises. I build a confidence-triggered lifelong adaptation layer: entropy and Monte Carlo dropout variance are calibrated on clean rollouts, low-confidence usable episodes are used for between-episode reward-weighted updates, and KL anchoring, clean replay, and Elastic Weight Consolidation protect the original policy. The final validation evaluates five methods over three controlled evaluation seeds and 75 episodes per severity. Using paired seed-level percent changes, the best clean-retaining tuned variant, reward-weighted rescue, nearly preserves clean reward ($-0.33\%$) and improves reward under mild ($+17.8\%$) and severe ($+39.2\%$) surprise, but it substantially underperforms the frozen policy under moderate surprise ($-31.5\%$). Success rates remain near zero. The result is therefore mixed but informative: confidence-triggered adaptation gives partial reward recovery without clear clean collapse in this simplified setting, while the moderate condition exposes a real stability-plasticity failure.
 \end{abstract}
 
 \section{Introduction}
@@ -145,7 +149,7 @@ The clean-trained frozen policy degrades sharply under surprise. In the final va
   \label{fig:reward-retention}
 \end{figure}
 
-The best clean-retaining tuned variant is \textsc{Reward-weighted rescue}: clean reward changes by only $-0.33\%$, mild improves by $+17.8\%$, and severe improves by $+39.2\%$ relative to frozen. \textsc{Improved PPO} gives the best mild reward ($+22.1\%$) and similar severe recovery ($+39.0\%$), but has a larger clean drop ($-1.17\%$). The difference between the tuned methods is small enough that the paper should not claim a decisive algorithmic win.
+Using paired seed-level percent changes, the best clean-retaining tuned variant is \textsc{Reward-weighted rescue}: clean reward changes by only $-0.33\%$, mild improves by $+17.8\%$, and severe improves by $+39.2\%$ relative to frozen. \textsc{Improved PPO} gives the best mild reward ($+22.1\%$) and similar severe recovery ($+39.0\%$), but has a larger clean drop ($-1.17\%$). The difference between the tuned methods is small enough that the paper should not claim a decisive algorithmic win.
 
 Two negative results are central. First, every adaptive method is worse than frozen on moderate surprise, with drops of roughly 31\%. Second, success rates remain near zero across the final validation. The method improves partial behavior, especially reward and waypoint progress, but it does not make the surprised task reliably successful.
 
