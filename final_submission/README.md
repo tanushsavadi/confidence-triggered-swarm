@@ -105,4 +105,4 @@ From the repository root:
 
 Known manual item: the local readiness checker cannot verify the PDF page count
 because `pdfinfo` is not installed, but the LaTeX log reports:
-`Output written on final_report.pdf (8 pages, 267282 bytes).`
+`Output written on final_report.pdf (8 pages, 267406 bytes).`
